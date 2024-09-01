@@ -1,0 +1,15 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "outDir": "./spec",
+        "types": []
+    },
+    "files": [],
+    "include": [
+        "src/**/*.spec.ts",
+        "src/**/*.d.ts"
+    ],
+    "exclude": [
+        "src/deploySlash.js"
+    ]
+}
