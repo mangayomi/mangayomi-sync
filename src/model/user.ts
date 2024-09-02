@@ -33,7 +33,7 @@ User.init({
         },
     },
     backupData: {
-        type: DataTypes.TEXT,
+        type: DataTypes.BLOB, // TODO fix too long for column
         allowNull: true,
     },
 }, {

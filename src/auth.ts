@@ -57,7 +57,7 @@ export function registerEndpoints(app: Express): void {
             if (auth && auth.split(" ").length > 1) {
                 decodedData = jwt.verify(auth.split(" ")[1], process.env.JWT_SECRET_KEY ?? 'cozy_furnace');
             } else {
-                res.status(401).json({});
+                res.status(401).json({ error: "Missing token" });
                 return;
             }
         } catch (error: any) {
@@ -76,7 +76,7 @@ export function registerEndpoints(app: Express): void {
                 res.status(200).json({ hash: hash.digest('hex') });
                 return;
             }
-            res.status(401).json({});
+            res.status(401).json({ error: "Missing token" });
         } catch (error: any) {
             console.log('Check failed: ', error);
             res.status(500).json({ error: "Server error" });
@@ -90,7 +90,7 @@ export function registerEndpoints(app: Express): void {
             if (auth && auth.split(" ").length > 1) {
                 decodedData = jwt.verify(auth.split(" ")[1], process.env.JWT_SECRET_KEY ?? 'cozy_furnace');
             } else {
-                res.status(401).json({});
+                res.status(401).json({ error: "Missing token" });
                 return;
             }
         } catch (error: any) {
@@ -105,13 +105,13 @@ export function registerEndpoints(app: Express): void {
                 },
             });
             if (user != null) {
-                user.backupData = req.body.backupData;
+                user.backupData = JSON.stringify(req.body.backupData);
                 await user.save({ transaction: transaction });
                 res.status(200).json({ backupData: user.backupData });
                 await transaction.commit();
                 return;
             }
-            res.status(401).json({});
+            res.status(401).json({ error: "Missing token" });
             await transaction.commit();
         } catch (error: any) {
             await transaction.rollback();
