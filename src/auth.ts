@@ -119,7 +119,7 @@ export function registerEndpoints(app: Express): void {
                 },
             });
             if (user != null) {
-                const mergedData = mergeProgress(user.backupData, req.body.backupData);
+                const mergedData = mergeProgress(JSON.parse(user.backupData ?? '{}'), req.body.backupData);
                 user.backupData = typeof mergedData === 'string' ? mergedData : JSON.stringify(mergedData);
                 await user.save({ transaction: transaction });
                 res.status(200).json({ backupData: user.backupData });
@@ -194,7 +194,7 @@ export function registerEndpoints(app: Express): void {
                 },
             });
             if (user != null) {
-                res.status(200).json({ backupData: JSON.parse(user.backupData ?? '') });
+                res.status(200).json({ backupData: user.backupData });
                 return;
             }
             res.status(401).json({ error: "Invalid token" });
