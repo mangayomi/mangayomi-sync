@@ -6,8 +6,15 @@ import { Buffer } from "node:buffer";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { db } from "./database.js";
+import { mergeProgress } from "./merge.js";
 
 export function registerEndpoints(app: Express): void {
+    /**
+     * @author Schnitzel5
+     * @version 1.0.0
+     * This endpoint is the entrypoint to retrieve the JWT token required 
+     * for all other secured endpoints (upload, download, ...).
+     */
     app.post('/login', async (req, res) => {
         const dto = new UserDTO();
         dto.email = req.body.email;
@@ -50,6 +57,13 @@ export function registerEndpoints(app: Express): void {
         }
     });
 
+    /**
+     * @author Schnitzel5
+     * @version 1.0.0
+     * This secured endpoint responds a "remote" hash of the logged users' 
+     * backup data which is compared to the "local" hash. 
+     * If the hash differs, then the progress should be synced.
+     */
     app.get('/check', async (req, res) => {
         let decodedData: any;
         try {
@@ -76,7 +90,7 @@ export function registerEndpoints(app: Express): void {
                 res.status(200).json({ hash: hash.digest('hex') });
                 return;
             }
-            res.status(401).json({ error: "Missing token" });
+            res.status(401).json({ error: "Invalid token" });
         } catch (error: any) {
             console.log('Check failed: ', error);
             res.status(500).json({ error: "Server error" });
@@ -105,17 +119,87 @@ export function registerEndpoints(app: Express): void {
                 },
             });
             if (user != null) {
-                user.backupData = JSON.stringify(req.body.backupData);
+                const mergedData = mergeProgress(user.backupData, req.body.backupData);
+                user.backupData = typeof mergedData === 'string' ? mergedData : JSON.stringify(mergedData);
                 await user.save({ transaction: transaction });
                 res.status(200).json({ backupData: user.backupData });
                 await transaction.commit();
                 return;
             }
-            res.status(401).json({ error: "Missing token" });
+            res.status(401).json({ error: "Invalid token" });
             await transaction.commit();
         } catch (error: any) {
             await transaction.rollback();
             console.log('Sync failed: ', error);
+            res.status(500).json({ error: "Server error" });
+        }
+    });
+
+    app.post('/upload/full', async (req, res) => {
+        let decodedData: any;
+        try {
+            const auth = req.headers.authorization;
+            if (auth && auth.split(" ").length > 1) {
+                decodedData = jwt.verify(auth.split(" ")[1], process.env.JWT_SECRET_KEY ?? 'cozy_furnace');
+            } else {
+                res.status(401).json({ error: "Missing token" });
+                return;
+            }
+        } catch (error: any) {
+            res.status(401).json({ error: error.message });
+            return;
+        }
+        const transaction = await db.sequelize.transaction();
+        try {
+            const user = await User.findOne({
+                where: {
+                    email: decodedData.email,
+                },
+            });
+            if (user != null) {
+                user.backupData = typeof req.body.backupData === 'string' ?
+                    req.body.backupData : JSON.stringify(req.body.backupData);
+                await user.save({ transaction: transaction });
+                res.status(200).json({ backupData: user.backupData });
+                await transaction.commit();
+                return;
+            }
+            res.status(401).json({ error: "Invalid token" });
+            await transaction.commit();
+        } catch (error: any) {
+            await transaction.rollback();
+            console.log('Sync failed: ', error);
+            res.status(500).json({ error: "Server error" });
+        }
+    });
+
+    app.get('/download', async (req, res) => {
+        let decodedData: any;
+        try {
+            const auth = req.headers.authorization;
+            if (auth && auth.split(" ").length > 1) {
+                decodedData = jwt.verify(auth.split(" ")[1], process.env.JWT_SECRET_KEY ?? 'cozy_furnace');
+            } else {
+                res.status(401).json({ error: "Missing token" });
+                return;
+            }
+        } catch (error: any) {
+            res.status(401).json({ error: error.message });
+            return;
+        }
+        try {
+            const user = await User.findOne({
+                where: {
+                    email: decodedData.email,
+                },
+            });
+            if (user != null) {
+                res.status(200).json({ backupData: JSON.parse(user.backupData ?? '') });
+                return;
+            }
+            res.status(401).json({ error: "Invalid token" });
+        } catch (error: any) {
+            console.log('Download failed: ', error);
             res.status(500).json({ error: "Server error" });
         }
     });

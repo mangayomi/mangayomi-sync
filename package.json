@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "start": "node --es-module-specifier-resolution=node dist/app.js",
-    "alternate": "tsc && node --es-module-specifier-resolution=node dist/app.js"
+    "buildstart": "tsc && node --es-module-specifier-resolution=node dist/app.js"
   },
   "keywords": [],
   "author": "Schnitzel5",

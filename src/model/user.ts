@@ -33,7 +33,7 @@ User.init({
         },
     },
     backupData: {
-        type: DataTypes.BLOB, // TODO fix too long for column
+        type: "MEDIUMTEXT",
         allowNull: true,
     },
 }, {
