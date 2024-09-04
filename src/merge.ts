@@ -31,7 +31,7 @@ function mergeProgressV1(oldData: BackupData, data: BackupData): string {
         if (newChapter == undefined) {
             return null;
         }
-        return newChapter.isRead || newChapter.lastPageRead > chapter.lastPageRead ? newChapter : chapter;
+        return newChapter.isRead || Number(newChapter.lastPageRead) > Number(chapter.lastPageRead) ? newChapter : chapter;
     }).filter(chapter => chapter != null);
     data.chapters.filter(newChapter => oldData.chapters.find(ch => ch.id === newChapter.id) == undefined)
         .forEach(ch => oldData.chapters.push(ch));
@@ -50,7 +50,7 @@ function mergeProgressV1(oldData: BackupData, data: BackupData): string {
         .forEach(tr => oldData.tracks.push(tr));
     oldData.history = oldData.history.map((history: History) => {
         const newHistory = data.history.find(h => h.mangaId === history.mangaId);
-        return newHistory != undefined && newHistory.date > history.date ? newHistory : history;
+        return newHistory != undefined && Number(newHistory.date) > Number(history.date) ? newHistory : history;
     });
     data.history.filter(newHistory => oldData.history.find(h => h.mangaId === newHistory.mangaId) == undefined)
         .forEach(h => oldData.history.push(h));
