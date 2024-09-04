@@ -9,6 +9,13 @@ export function mergeProgress(oldData: BackupData, data: BackupData): string {
     return JSON.stringify(oldData);
 };
 
+/**
+ * @author Schnitzel5
+ * @version 1.0.0
+ * syncing chapters is not 100% straight-forward because of the missing timestamp info,
+ * it relies on the lastest read progress which might be annoying for users who want to 
+ * reread a manga or rewatch an anime
+ */
 function mergeProgressV1(oldData: BackupData, data: BackupData): string {
     oldData.manga = oldData.manga.map((manga: Manga) => {
         const newManga = data.manga.find(m => m.id === manga.id);
