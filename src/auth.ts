@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { db } from "./database.js";
 import { mergeProgress } from "./merge.js";
+import { BackupData, Category, Chapter, History, Manga, Track } from "./model/backup.js";
 
 export function registerEndpoints(app: Express): void {
     /**
@@ -53,6 +54,66 @@ export function registerEndpoints(app: Express): void {
             res.status(200).json({ token: token });
         } catch (error: any) {
             console.log('Login failed: ', error);
+            res.status(500).json({ error: "Server error" });
+        }
+    });
+
+    /**
+     * @author Schnitzel5
+     * @version 1.0.0
+     * This secured endpoint responds a "remote" hash of the logged users' 
+     * backup data which is compared to the "local" hash. 
+     * If the hash differs, then the progress should be synced.
+     */
+    app.get('/check', async (req, res) => {
+        let decodedData: any;
+        try {
+            const auth = req.headers.authorization;
+            if (auth && auth.split(" ").length > 1) {
+                decodedData = jwt.verify(auth.split(" ")[1], process.env.JWT_SECRET_KEY ?? 'cozy_furnace');
+            } else {
+                res.status(401).json({ error: "Missing token" });
+                return;
+            }
+        } catch (error: any) {
+            res.status(401).json({ error: error.message });
+            return;
+        }
+        try {
+            const user = await User.findOne({
+                where: {
+                    email: decodedData.email,
+                },
+            });
+            if (user != null) {
+                const hash = crypto.createHash("sha256");
+                const backup = user.backupData ? JSON.parse(user.backupData) as BackupData : null;
+                if (!backup) {
+                    res.status(200).json({ hash: hash.update(Buffer.from("")).digest("hex") });
+                    return;
+                }
+                const filteredBackup: {
+                    version: string;
+                    manga: Manga[];
+                    categories: Category[];
+                    chapters: Chapter[];
+                    tracks: Track[];
+                    history: History[];
+                } = {
+                    version: backup.version,
+                    manga: backup.manga,
+                    categories: backup.categories,
+                    chapters: backup.chapters,
+                    tracks: backup.tracks,
+                    history: backup.history,
+                };
+                hash.update(Buffer.from(JSON.stringify(filteredBackup)).toString('utf-8'));
+                res.status(200).json({ hash: hash.digest('hex') });
+                return;
+            }
+            res.status(401).json({ error: "Invalid token" });
+        } catch (error: any) {
+            console.log('Check failed: ', error);
             res.status(500).json({ error: "Server error" });
         }
     });
