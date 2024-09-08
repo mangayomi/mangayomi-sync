@@ -1,5 +1,8 @@
+import { ChangedItems } from "./changed"
+
 export interface Root {
     backupData: BackupData
+    changedItems: ChangedItems
 }
 
 export interface BackupData {

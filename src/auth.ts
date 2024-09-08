@@ -151,7 +151,7 @@ export function registerEndpoints(app: Express): void {
                 },
             });
             if (user != null) {
-                const mergedData = mergeProgress(JSON.parse(user.backupData ?? '{}'), req.body.backupData);
+                const mergedData = mergeProgress(JSON.parse(user.backupData ?? '{}'), req.body.backupData, req.body.changedItems);
                 user.backupData = typeof mergedData === 'string' ? mergedData : JSON.stringify(mergedData);
                 await user.save({ transaction: transaction });
                 res.status(200).json({ backupData: user.backupData });
