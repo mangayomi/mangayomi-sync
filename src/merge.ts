@@ -134,5 +134,34 @@ function mergeProgressV1(
     )
     .forEach((h) => oldData.history.push(h)); // append new manga history
 
+  oldData.feeds = oldData.feeds
+    .map((feed) => {
+      const newFeed = data.feeds.find((f) => f.id === feed.id);
+      if (
+        changedItems.updatedChapters.find(
+          (deleted) => deleted.deleted && deleted.mangaId === feed.mangaId
+        ) != undefined
+      ) {
+        return null;
+      }
+      return newFeed &&
+        (Number(newFeed.date) >= Number(newFeed.date) ||
+          newFeed.chapterName !== feed.chapterName ||
+          newFeed.mangaId !== feed.mangaId)
+        ? newFeed
+        : feed;
+    })
+    .filter((feed) => feed != null); // discard feeds of removed mangas and update existing feed items on diff
+  data.feeds
+    .filter(
+      (newFeeds) =>
+        oldData.feeds.find(
+          (f) =>
+            f.mangaId === newFeeds.mangaId &&
+            f.chapterName === newFeeds.chapterName
+        ) == undefined
+    )
+    .forEach((f) => oldData.feeds.push(f)); // append new feeds
+
   return JSON.stringify(oldData);
 }

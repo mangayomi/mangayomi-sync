@@ -17,6 +17,7 @@ export interface BackupData {
     settings: Setting[]
     extensions: Extension[]
     extensions_preferences: ExtensionsPreference[]
+    feeds: Feed[]
 }
 
 export interface Manga {
@@ -308,4 +309,11 @@ export interface EditTextPreference {
     dialogTitle: string
     dialogMessage: string
     text: string
+}
+
+export interface Feed {
+    id: number
+    mangaId: number
+    chapterName: string
+    date: string
 }
