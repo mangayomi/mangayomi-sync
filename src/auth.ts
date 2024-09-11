@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { db } from "./database.js";
 import { mergeProgress } from "./merge.js";
-import { BackupData, Category, Chapter, History, Manga, Track } from "./model/backup.js";
+import { BackupData, Category, Chapter, Feed, History, Manga, Track } from "./model/backup.js";
 
 export function registerEndpoints(app: Express): void {
     /**
@@ -99,6 +99,7 @@ export function registerEndpoints(app: Express): void {
                     chapters: Chapter[];
                     tracks: Track[];
                     history: History[];
+                    feeds: Feed[];
                 } = {
                     version: backup.version,
                     manga: backup.manga,
@@ -106,6 +107,7 @@ export function registerEndpoints(app: Express): void {
                     chapters: backup.chapters,
                     tracks: backup.tracks,
                     history: backup.history,
+                    feeds: backup.feeds,
                 };
                 hash.update(Buffer.from(JSON.stringify(filteredBackup)).toString('utf-8'));
                 res.status(200).json({ hash: hash.digest('hex') });

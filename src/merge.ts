@@ -133,7 +133,10 @@ function mergeProgressV1(
         undefined
     )
     .forEach((h) => oldData.history.push(h)); // append new manga history
-
+  
+  if (!oldData.feeds) {
+    oldData.feeds = [];
+  }
   oldData.feeds = oldData.feeds
     .map((feed) => {
       const newFeed = data.feeds.find((f) => f.id === feed.id);
