@@ -1,4 +1,4 @@
-import { BackupData, Chapter, History, Manga, Track } from "./model/backup";
+import { BackupData } from "./model/backup";
 import { ChangedItems } from "./model/changed";
 
 export function mergeProgress(
