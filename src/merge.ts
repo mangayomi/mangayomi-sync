@@ -69,9 +69,10 @@ function mergeProgressV1(
   data.chapters
     .filter(
       (newChapter) =>
+        oldData.manga.find((m) => m.id === newChapter.mangaId) != undefined &&
         oldData.chapters.find((ch) => ch.id === newChapter.id) == undefined
     )
-    .forEach((ch) => oldData.chapters.push(ch)); // append new added chapters
+    .forEach((ch) => oldData.chapters.push(ch)); // append new added chapters only if the manga exists, otherwise there will be merge conflicts
 
   oldData.categories = oldData.categories.filter((category) => {
     const newCategory = data.categories.find((cat) => cat.id === category.id);
@@ -129,11 +130,12 @@ function mergeProgressV1(
   data.history
     .filter(
       (newHistory) =>
+        oldData.manga.find((m) => m.id === newHistory.mangaId) &&
         oldData.history.find((h) => h.mangaId === newHistory.mangaId) ==
-        undefined
+          undefined
     )
-    .forEach((h) => oldData.history.push(h)); // append new manga history
-  
+    .forEach((h) => oldData.history.push(h)); // append new manga history only if the manga exists, otherwise there will be merge conflicts
+
   if (!oldData.feeds) {
     oldData.feeds = [];
   }

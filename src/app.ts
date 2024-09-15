@@ -3,7 +3,8 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import compression from "compression";
 import { db } from "./database.js";
-import { registerEndpoints } from "./auth.js";
+import * as auth from "./auth.js";
+import * as migration from "./migration.js";
 
 dotenv.config();
 const app = express();
@@ -28,7 +29,8 @@ app.use(compression());
     });
 })();
 
-registerEndpoints(app);
+auth.registerEndpoints(app);
+migration.registerEndpoints(app);
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is running at http://0.0.0.0:${process.env.PORT}`);
