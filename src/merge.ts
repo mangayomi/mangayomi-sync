@@ -65,6 +65,7 @@ function mergeProgressV1(
       }
       return updatedChapterItem && newChapter ? newChapter : chapter;
     })
+    .filter((chapter) => oldData.manga.find((m) => m.id === chapter?.mangaId) != undefined)
     .filter((chapter) => chapter != null); // discard removed chapters and update chapter read progress
   data.chapters
     .filter(
@@ -126,6 +127,7 @@ function mergeProgressV1(
         ? newHistory
         : history;
     })
+    .filter((history) => oldData.manga.find((m) => m.id === history?.mangaId) != undefined)
     .filter((history) => history != null); // discard removed manga history and update existing manga history by date timestamp
   data.history
     .filter(
