@@ -79,6 +79,15 @@ export function registerEndpoints(app: Express): void {
             if (settings) {
                 processSettings(backup, settings);
             }
+            if (categories) {
+                processCategories(backup, categories);
+            }
+            if (favourites) {
+                processFavourites(backup, favourites);
+            }
+            if (histories) {
+                processHistories(backup, histories);
+            }
             if (bookmarks) {
                 processBookmarks(backup, bookmarks);
             }
@@ -95,11 +104,41 @@ function processBookmarks(backup: BackupData, bookmarks: BookmarkItems) {
 }
 
 function processCategories(backup: BackupData, categories: Categories) {
-
+    for (var i = 0; i < categories.length; i++) {
+        backup.categories.push({
+            id: categories[i].category_id,
+            name: categories[i].title,
+            forManga: true,
+        });
+    }
 }
 
 function processFavourites(backup: BackupData, favourites: Favourites) {
-
+    for (var i = 0; i < favourites.length; i++) {
+        const manga = favourites[i];
+        backup.manga.push({
+            id: manga.manga_id,
+            categories: [manga.category_id],
+            isManga: true,
+            name: manga.manga.title,
+            link: manga.manga.url, // check client code
+            author: manga.manga.author ?? '',
+            artist: manga.manga.author ?? '',
+            dateAdded: Date.now(),
+            favorite: true,
+            lastRead: Date.now(),
+            lastUpdate: Date.now(),
+            genre: manga.manga.tags.map(tag => tag.title),
+            customCoverImage: null,
+            customCoverFromTracker: null,
+            description: '',
+            isLocalArchive: false,
+            lang: 'en', // check client code
+            imageUrl: manga.manga.cover_url,
+            status: 0, // check client code
+            source: manga.manga.source,
+        });
+    }
 }
 
 function processHistories(backup: BackupData, histories: Histories) {
