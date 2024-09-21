@@ -183,7 +183,7 @@ export interface Setting {
     fullScreenReader: boolean
     enableCustomColorFilter: boolean
     colorFilterBlendMode: number
-    playerSubtitleSettings: PlayerSubtitleSettings
+    playerSubtitleSettings: PlayerSubtitleSettings | null
     mangaHomeDisplayType: number
     appFontFamily: any
     mangaGridSize: any
