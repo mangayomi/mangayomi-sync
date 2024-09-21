@@ -138,37 +138,37 @@ function mergeProgressV1(
     )
     .forEach((h) => oldData.history.push(h)); // append new manga history only if the manga exists, otherwise there will be merge conflicts
 
-  if (!oldData.feeds) {
-    oldData.feeds = [];
+  if (!oldData.updates) {
+    oldData.updates = [];
   }
-  oldData.feeds = oldData.feeds
-    .map((feed) => {
-      const newFeed = data.feeds.find((f) => f.id === feed.id);
+  oldData.updates = oldData.updates
+    .map((update) => {
+      const newUpdate = data.updates.find((up) => up.id === update.id);
       if (
         changedItems.updatedChapters.find(
-          (deleted) => deleted.deleted && deleted.mangaId === feed.mangaId
+          (deleted) => deleted.deleted && deleted.mangaId === update.mangaId
         ) != undefined
       ) {
         return null;
       }
-      return newFeed &&
-        (Number(newFeed.date) >= Number(newFeed.date) ||
-          newFeed.chapterName !== feed.chapterName ||
-          newFeed.mangaId !== feed.mangaId)
-        ? newFeed
-        : feed;
+      return newUpdate &&
+        (Number(newUpdate.date) >= Number(update.date) ||
+        newUpdate.chapterName !== update.chapterName ||
+        newUpdate.mangaId !== update.mangaId)
+        ? newUpdate
+        : update;
     })
-    .filter((feed) => feed != null); // discard feeds of removed mangas and update existing feed items on diff
-  data.feeds
+    .filter((update) => update != null); // discard updates of removed mangas and update existing updates items on diff
+  data.updates
     .filter(
-      (newFeeds) =>
-        oldData.feeds.find(
-          (f) =>
-            f.mangaId === newFeeds.mangaId &&
-            f.chapterName === newFeeds.chapterName
+      (newUpdate) =>
+        oldData.updates.find(
+          (up) =>
+            up.mangaId === newUpdate.mangaId &&
+            up.chapterName === newUpdate.chapterName
         ) == undefined
     )
-    .forEach((f) => oldData.feeds.push(f)); // append new feeds
+    .forEach((up) => oldData.updates.push(up)); // append new updates
 
   return JSON.stringify(oldData);
 }

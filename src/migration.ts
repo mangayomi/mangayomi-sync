@@ -33,7 +33,7 @@ export function registerEndpoints(app: Express): void {
                 downloads: [],
                 extensions: [],
                 extensions_preferences: [],
-                feeds: [],
+                updates: [],
                 history: [],
                 manga: [],
                 settings: [],
@@ -135,7 +135,7 @@ function processFavourites(backup: BackupData, favourites: Favourites) {
             isLocalArchive: false,
             lang: 'en', // check client code
             imageUrl: manga.manga.cover_url,
-            status: 0, // check client code
+            status: 0,
             source: manga.manga.source,
         });
     }
