@@ -11,7 +11,7 @@ import {
   BackupData,
   Category,
   Chapter,
-  Feed,
+  Update,
   History,
   Manga,
   Track,
@@ -120,7 +120,7 @@ export function registerEndpoints(app: Express): void {
           chapters: Chapter[];
           tracks: Track[];
           history: History[];
-          feeds: Feed[];
+          updates: Update[];
         } = {
           version: backup.version,
           manga: backup.manga,
@@ -128,7 +128,7 @@ export function registerEndpoints(app: Express): void {
           chapters: backup.chapters,
           tracks: backup.tracks,
           history: backup.history,
-          feeds: backup.feeds,
+          updates: backup.updates,
         };
         hash.update(
           Buffer.from(JSON.stringify(filteredBackup)).toString("utf-8")
