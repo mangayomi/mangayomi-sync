@@ -16,6 +16,7 @@ const endMiddleware = (req: Request, res: Response, next: any) => {
     next();
 };
 
+app.use(express.static("public"));
 app.use(cors({
     origin: process.env.MODE !== "prod" ? "http://localhost:25565" : process.env.CORS_ORIGIN_URL
 }));
