@@ -8,9 +8,11 @@ import { Favourites } from "./migration/kotatsu/favourites";
 import { Histories } from "./migration/kotatsu/histories";
 import { Settings } from "./migration/kotatsu/settings";
 import { Sources } from "./migration/kotatsu/sources";
+import axios from "axios";
+import { JSONPath } from "jsonpath-plus";
 
 const upload = multer({
-    storage: multer.memoryStorage(),
+  storage: multer.memoryStorage(),
 });
 
 export function registerEndpoints(app: Express): void {
@@ -83,7 +85,7 @@ export function registerEndpoints(app: Express): void {
         processCategories(backup, categories);
       }
       if (favourites) {
-        processFavourites(backup, favourites, droppedMangas);
+        await processFavourites(backup, favourites, droppedMangas);
       }
       if (histories) {
         processHistories(backup, histories, droppedMangas);
@@ -111,7 +113,7 @@ export function registerEndpoints(app: Express): void {
   });
 }
 
-function processBookmarks(backup: BackupData, bookmarks: BookmarkItems, droppedMangas: number[]) {}
+function processBookmarks(backup: BackupData, bookmarks: BookmarkItems, droppedMangas: number[]) { }
 
 function processCategories(backup: BackupData, categories: Categories) {
   for (var i = 0; i < categories.length; i++) {
@@ -123,13 +125,13 @@ function processCategories(backup: BackupData, categories: Categories) {
   }
 }
 
-function processFavourites(backup: BackupData, favourites: Favourites, droppedMangas: number[]) {
+async function processFavourites(backup: BackupData, favourites: Favourites, droppedMangas: number[]) {
   for (var i = 0; i < favourites.length; i++) {
     const manga = favourites[i];
     if (manga.manga.source !== "MANGADEX") {
-        console.log("Manga dropped (unknown source):", manga.manga.title);
-        droppedMangas.push(manga.manga_id);
-        continue;
+      console.log("Manga dropped (unknown source):", manga.manga.title);
+      droppedMangas.push(manga.manga_id);
+      continue;
     }
     backup.manga.push({
       id: manga.manga_id,
@@ -153,14 +155,52 @@ function processFavourites(backup: BackupData, favourites: Favourites, droppedMa
       status: 0,
       source: manga.manga.source,
     });
+    const res = await paginatedChapterListRequest(manga.manga.url, 0);
+    if (res.status === 200) {
+      const chapterList = JSONPath({
+        path: "$.data[*]",
+        json: res.data,
+      });
+      const limit: number = JSONPath({
+        path: "$.limit",
+        json: res.data,
+      });
+      let offset: number = JSONPath({
+        path: "$.offset",
+        json: res.data,
+      });
+      const total: number = JSONPath({
+        path: "$.total",
+        json: res.data,
+      });
+      let hasMoreResults = (limit + offset) < total;
+      while (hasMoreResults) {
+        offset += limit;
+        var newRequest = await paginatedChapterListRequest(manga.manga.url, offset);
+        const total = JSONPath({
+          path: "$.total",
+          json: res.data,
+        });
+        const chapterList = JSONPath({
+          path: "$.data[*]",
+          json: res.data,
+        });
+        hasMoreResults = (limit + offset) < total;
+      }
+    }
   }
+}
+
+async function paginatedChapterListRequest(mangaId: string, offset: number) {
+  const res = await axios.get(`https://api.mangadex.org/manga/${mangaId}/feed?limit=500&offset=${offset}&includes[]=user&includes[]=scanlation_group&order[volume]=desc&order[chapter]=desc&translatedLanguage[]=$lang&includeFuturePublishAt=0&includeEmptyPages=0`);
+  return res;
 }
 
 function processHistories(backup: BackupData, histories: Histories, droppedMangas: number[]) {
   for (var i = 0; i < histories.length; i++) {
     const history = histories[i];
     if (droppedMangas.includes(history.manga_id)) {
-        continue;
+      continue;
     }
     backup.history.push({
       id: i + 1,

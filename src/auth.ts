@@ -59,6 +59,8 @@ export function registerEndpoints(app: Express): void {
         {
           uuid: user.id,
           email: user.email,
+          mangaSourcesListUrl: process.env.MANGA_SOURCE_LIST_URL ?? null,
+          animeSourcesListUrl: process.env.ANIME_SOURCE_LIST_URL ?? null,
         },
         process.env.JWT_SECRET_KEY ?? "cozy_furnace",
         {
