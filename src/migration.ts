@@ -270,7 +270,7 @@ function getChapters(backup: BackupData, chapterList: any, mangaId: number) {
 }
 
 function generateUid(source: string, url: string): String {
-  var h = new Long(1125899906842597);
+  var h = Long.fromNumber(1125899906842597);
   for (let i = 0; i < source.length; i++) {
     h = h.multiply(31).add(source.codePointAt(i) ?? 0);
   }
