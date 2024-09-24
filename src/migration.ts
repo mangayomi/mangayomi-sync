@@ -78,22 +78,28 @@ export function registerEndpoints(app: Express): void {
         })
       );
       const droppedMangas: number[] = [];
+      console.log("Processing settings...");
       if (settings) {
         processSettings(backup, settings);
         processSources(backup, settings);
       }
+      console.log("Processing categories...");
       if (categories) {
         processCategories(backup, categories);
       }
+      console.log("Processing favourites...");
       if (favourites) {
         await processFavourites(backup, favourites, droppedMangas);
       }
+      console.log("Processing histories...");
       if (histories) {
         processHistories(backup, histories, droppedMangas);
       }
+      console.log("Processing bookmarks...");
       if (bookmarks) {
         processBookmarks(backup, bookmarks, droppedMangas);
       }
+      console.log("Done.");
       const date = new Date();
       const dateString = `${date.getFullYear()}-${handleDigits(
         date.getMonth() + 1
@@ -119,7 +125,11 @@ const mangaIds: Map<number, number> = new Map();
 let chapterIndex = 1;
 const chapterIds: Map<number, number> = new Map();
 
-function processBookmarks(backup: BackupData, bookmarks: BookmarkItems, droppedMangas: number[]) { }
+function processBookmarks(
+  backup: BackupData,
+  bookmarks: BookmarkItems,
+  droppedMangas: number[]
+) {}
 
 function processCategories(backup: BackupData, categories: Categories) {
   for (var i = 0; i < categories.length; i++) {
@@ -131,11 +141,20 @@ function processCategories(backup: BackupData, categories: Categories) {
   }
 }
 
-async function processFavourites(backup: BackupData, favourites: Favourites, droppedMangas: number[]) {
+async function processFavourites(
+  backup: BackupData,
+  favourites: Favourites,
+  droppedMangas: number[]
+) {
   for (var i = 0; i < favourites.length; i++) {
     const manga = favourites[i];
     if (manga.manga.source !== "MANGADEX") {
-      console.log("Manga dropped (unknown source):", manga.manga.title, " | ", manga.manga.source);
+      console.log(
+        "Manga dropped (unknown source):",
+        manga.manga.title,
+        " | ",
+        manga.manga.source
+      );
       droppedMangas.push(manga.manga_id);
       continue;
     }
@@ -163,8 +182,8 @@ async function processFavourites(backup: BackupData, favourites: Favourites, dro
       status: 0,
       source: manga.manga.source,
     });
-    const res = await paginatedChapterListRequest(manga.manga.url, 0, 'en');
-    if (res.status === 200) {
+    const res = await paginatedChapterListRequest(manga.manga.url, 0, "en");
+    if (res && res.status === 200) {
       const chapterList = JSONPath({
         path: "$.data[*]",
         json: res.data,
@@ -172,23 +191,25 @@ async function processFavourites(backup: BackupData, favourites: Favourites, dro
       const limit: number = JSONPath({
         path: "$.limit",
         json: res.data,
-      });
+      })[0];
       let offset: number = JSONPath({
         path: "$.offset",
         json: res.data,
-      });
+      })[0];
       const total: number = JSONPath({
         path: "$.total",
         json: res.data,
-      });
-      console.log("DEBUG:", manga.manga.title);
+      })[0];
       getChapters(backup, chapterList, mangaId);
-      break;
-      let hasMoreResults = (limit + offset) < total;
+      let hasMoreResults = limit + offset < total;
       while (hasMoreResults) {
         offset += limit;
-        var newRequest = await paginatedChapterListRequest(manga.manga.url, offset, 'en');
-        if (newRequest.status !== 200) {
+        var newRequest = await paginatedChapterListRequest(
+          manga.manga.url,
+          offset,
+          "en"
+        );
+        if (!newRequest || newRequest.status !== 200) {
           break;
         }
         const total = JSONPath({
@@ -200,23 +221,43 @@ async function processFavourites(backup: BackupData, favourites: Favourites, dro
           json: res.data,
         });
         getChapters(backup, chapterList, mangaId);
-        hasMoreResults = (limit + offset) < total;
+        hasMoreResults = limit + offset < total;
       }
     }
+    await sleep(500);
   }
 }
 
-async function paginatedChapterListRequest(mangaId: string, offset: number, lang: string) {
-  const res = await axios.get(`https://api.mangadex.org/manga/${mangaId}/feed?limit=500&offset=${offset}&includes[]=user&includes[]=scanlation_group&order[volume]=desc&order[chapter]=desc&translatedLanguage[]=${lang}&includeFuturePublishAt=0&includeEmptyPages=0`);
-  return res;
+async function paginatedChapterListRequest(
+  mangaId: string,
+  offset: number,
+  lang: string
+) {
+  try {
+    const res = await axios.get(
+      `https://api.mangadex.org/manga/${mangaId.replaceAll(
+        "/title/",
+        ""
+      )}/feed?limit=500&offset=${offset}&includes[]=user&includes[]=scanlation_group&order[volume]=desc&order[chapter]=desc&translatedLanguage[]=${lang}&includeFuturePublishAt=0&includeEmptyPages=0`
+    );
+    return res;
+  } catch (err) {
+    return null;
+  }
 }
 
 function getChapters(backup: BackupData, chapterList: any, mangaId: number) {
   for (const chapter of chapterList) {
     let scan = "";
     let chapterName = "";
-    const groupName = JSONPath({ path: '$.relationships[*].attributes.name', json: chapter });
-    const uploaderName = JSONPath({ path: '$.relationships[*].attributes.username', json: chapter });
+    const groupName = JSONPath({
+      path: "$.relationships[*].attributes.name",
+      json: chapter,
+    });
+    const uploaderName = JSONPath({
+      path: "$.relationships[*].attributes.username",
+      json: chapter,
+    });
     if (groupName?.length > 0 && groupName[0]) {
       scan += groupName[0];
       if (uploaderName?.length > 0 && uploaderName[0]) {
@@ -225,11 +266,17 @@ function getChapters(backup: BackupData, chapterList: any, mangaId: number) {
     } else {
       scan = "No Group";
     }
-    const volume = JSONPath({ path: '$.attributes.volume', json: chapter });
-    const chapterNum = JSONPath({ path: '$.attributes.chapter', json: chapter });
-    const title = JSONPath({ path: '$.attributes.title', json: chapter });
-    const publishDate = JSONPath({ path: '$.attributes.publishAt', json: chapter })[0];
-    const chapterId = JSONPath({ path: '$.id', json: chapter })[0];
+    const volume = JSONPath({ path: "$.attributes.volume", json: chapter });
+    const chapterNum = JSONPath({
+      path: "$.attributes.chapter",
+      json: chapter,
+    });
+    const title = JSONPath({ path: "$.attributes.title", json: chapter });
+    const publishDate = JSONPath({
+      path: "$.attributes.publishAt",
+      json: chapter,
+    })[0];
+    const chapterId = JSONPath({ path: "$.id", json: chapter })[0];
     if (volume?.length > 0 && volume[0] && volume[0] !== "null") {
       chapterName = `Vol.${volume[0]} `;
     }
@@ -246,12 +293,9 @@ function getChapters(backup: BackupData, chapterList: any, mangaId: number) {
       chapterName += "Oneshot";
     }
 
-    console.log("CHAPTER:", scan, chapterName, publishDate, chapterId);
     const chapterUid = generateUid("MANGADEX", chapterId);
-    console.log("DEBUG:", chapterId, String(chapterUid));
-
     const chapterIdx = chapterIndex++;
-    chapterIds.set(chapterId, chapterIdx);
+    chapterIds.set(chapterUid, chapterIdx);
 
     backup.chapters.push({
       id: chapterIdx,
@@ -260,16 +304,15 @@ function getChapters(backup: BackupData, chapterList: any, mangaId: number) {
       isBookmarked: false,
       scanlator: scan,
       name: chapterName,
-      isRead: true,
+      isRead: false,
       lastPageRead: "1",
       mangaId: mangaId,
       archivePath: "",
     });
-    break;
   }
 }
 
-function generateUid(source: string, url: string): String {
+function generateUid(source: string, url: string): number {
   var h = Long.fromNumber(1125899906842597);
   for (let i = 0; i < source.length; i++) {
     h = h.multiply(31).add(source.codePointAt(i) ?? 0);
@@ -277,13 +320,21 @@ function generateUid(source: string, url: string): String {
   for (let i = 0; i < url.length; i++) {
     h = h.multiply(31).add(url.codePointAt(i) ?? 0);
   }
-	return h.toString(10); // check unsigned
+  return h.toNumber();
 }
 
-function processHistories(backup: BackupData, histories: Histories, droppedMangas: number[]) {
+function processHistories(
+  backup: BackupData,
+  histories: Histories,
+  droppedMangas: number[]
+) {
   for (var i = 0; i < histories.length; i++) {
     const history = histories[i];
-    if (droppedMangas.includes(history.manga_id)) {
+    if (
+      droppedMangas.includes(history.manga_id) ||
+      !mangaIds.get(history.manga_id) ||
+      !chapterIds.get(history.chapter_id)
+    ) {
       continue;
     }
     backup.history.push({
@@ -293,6 +344,10 @@ function processHistories(backup: BackupData, histories: Histories, droppedManga
       chapterId: chapterIds.get(history.chapter_id) ?? history.chapter_id,
       date: String(history.updated_at),
     });
+    const readChapter = backup.chapters.filter((chapter) => chapter.id === chapterIds.get(history.chapter_id));
+    if (readChapter.length > 0) {
+      readChapter[0].isRead = true;
+    }
   }
 }
 
@@ -420,4 +475,10 @@ function processSources(backup: BackupData, sources: Sources) {
 
 function handleDigits(value: number): string {
   return value >= 10 ? String(value) : `0${value}`;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
