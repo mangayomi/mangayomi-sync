@@ -80,7 +80,7 @@ export function registerEndpoints(app: Express): void {
       const droppedMangas: number[] = [];
       console.log("Processing settings...");
       if (settings) {
-        processSettings(backup, settings);
+        // processSettings(backup, settings);
         processSources(backup, settings);
       }
       console.log("Processing categories...");
@@ -178,7 +178,7 @@ async function processFavourites(
       description: "",
       isLocalArchive: false,
       lang: "en",
-      imageUrl: manga.manga.cover_url,
+      imageUrl: "https://furnace.30062022.xyz/cover.jpg",
       status: 0,
       source: manga.manga.source,
     });
@@ -300,7 +300,7 @@ function getChapters(backup: BackupData, chapterList: any, mangaId: number) {
     backup.chapters.push({
       id: chapterIdx,
       url: chapterId,
-      dateUpload: publishDate,
+      dateUpload: String(Date.parse(publishDate)),
       isBookmarked: false,
       scanlator: scan,
       name: chapterName,
