@@ -81,7 +81,7 @@ export function registerEndpoints(app: Express): void {
       console.log("Processing settings...");
       if (settings) {
         // processSettings(backup, settings);
-        processSources(backup, settings);
+        await processSources(backup, settings);
       }
       console.log("Processing categories...");
       if (categories) {
@@ -440,7 +440,8 @@ function processSettings(backup: BackupData, settings: Settings) {
   });
 }
 
-function processSources(backup: BackupData, sources: Sources) {
+async function processSources(backup: BackupData, sources: Sources) {
+  const sourceCode = await axios.get("https://raw.githubusercontent.com/kodjodevf/mangayomi-extensions/main/dart/manga/src/all/mangadex/mangadex.dart"); 
   backup.extensions.push({
     apiUrl: "https://api.mangadex.org",
     appMinVerReq: "0.2.0",
@@ -461,11 +462,12 @@ function processSources(backup: BackupData, sources: Sources) {
     lang: "en",
     lastUsed: false,
     name: "MangaDex",
+    sourceCode: String(sourceCode.data),
     sourceCodeUrl:
       "https://raw.githubusercontent.com/kodjodevf/mangayomi-extensions/main/dart/manga/src/all/mangadex/mangadex.dart",
     typeSource: "mangadex",
-    version: "0.0.8",
-    versionLast: "0.0.8",
+    version: "0.0.9",
+    versionLast: "0.0.9",
     additionalParams: "",
     sourceCodeLanguage: 0,
     isObsolete: false,
