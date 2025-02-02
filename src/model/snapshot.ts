@@ -1,41 +1,36 @@
 import { DataTypes, Model } from "sequelize";
 import { db } from "../database.js";
-import { Snapshot } from "./snapshot.js";
 
-export class User extends Model {
+export class Snapshot extends Model {
     declare id: string;
-    declare email: string;
-    declare passwordHash: string;
-    declare backupData: string | null;
+    declare user: string;
+    declare data: string;
+    declare version: number;
 }
 
 const sequelize = db.sequelize;
 
-User.init({
+Snapshot.init({
     id: {
         type: DataTypes.UUID,
         primaryKey: true,
         defaultValue: DataTypes.UUIDV4,
         allowNull: false,
     },
-    email: {
-        type: DataTypes.STRING,
+    user: {
+        type: DataTypes.UUID,
         allowNull: false,
-        unique: true,
-        validate: {
-            isEmail: true,
-        },
     },
-    passwordHash: {
-        type: DataTypes.STRING,
+    data: {
+        type: "MEDIUMTEXT",
+        allowNull: true,
+    },
+    version: {
+        type: DataTypes.NUMBER,
         allowNull: false,
         validate: {
             is: /^\$2[ayb]\$.{56}$/i,
         },
-    },
-    backupData: {
-        type: "MEDIUMTEXT",
-        allowNull: true,
     },
 }, {
     tableName: "users",
@@ -45,8 +40,3 @@ User.init({
     updatedAt: "dbUpdatedAt",
     deletedAt: "dbDeletedAt",
 });
-
-User.hasMany(Snapshot, {
-    foreignKey: "user",
-});
-Snapshot.belongsTo(User);

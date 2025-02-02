@@ -1,7 +1,7 @@
 {
-  "name": "cozyfurnace",
+  "name": "sugoireads-syncserver",
   "version": "1.0.0",
-  "description": "The sync server for mangayomi",
+  "description": "The sync server for SugoiReads",
   "main": "app.ts",
   "type": "module",
   "scripts": {

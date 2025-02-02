@@ -30,7 +30,7 @@ export function registerEndpoints(app: Express): void {
       }
       const dir = await unzipper.Open.buffer(req.file.buffer);
       const backup: BackupData = {
-        version: "1",
+        version: "2",
         categories: [],
         chapters: [],
         downloads: [],

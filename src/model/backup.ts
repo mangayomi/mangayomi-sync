@@ -32,7 +32,7 @@ export interface Manga {
     id: number
     imageUrl: string
     isLocalArchive: boolean
-    isManga: boolean
+    itemType: number
     lang: string
     lastRead: number
     lastUpdate: number
@@ -46,7 +46,7 @@ export interface Manga {
 export interface Category {
     id: number
     name: string
-    forManga: boolean
+    forItemType: number
 }
 
 export interface Chapter {
@@ -58,7 +58,7 @@ export interface Chapter {
     lastPageRead: string
     mangaId: number
     name: string
-    scanlator: string
+    scanlator?: string
     url: string
 }
 
@@ -102,7 +102,7 @@ export interface History {
     chapterId: number
     date: string
     id: number
-    isManga: boolean
+    itemType: number
     mangaId: number
 }
 
@@ -123,7 +123,7 @@ export interface Setting {
     chapterPageIndexList: ChapterPageIndexList[]
     chapterPageUrlsList: ChapterPageUrlsList[]
     checkForExtensionUpdates: boolean
-    cookiesList: any
+    cookiesList: CookiesList[]
     cropBorders: boolean
     dateFormat: string
     defaultReaderMode: number
@@ -131,7 +131,7 @@ export interface Setting {
     doubleTapAnimationSpeed: number
     downloadLocation: string
     downloadOnlyOnWifi: boolean
-    filterScanlatorList: any
+    filterScanlatorList: FilterScanlatorList[]
     flexColorSchemeBlendLevel: number
     flexSchemeColorIndex: number
     id: number
@@ -150,46 +150,67 @@ export interface Setting {
     libraryShowContinueReadingButton: boolean
     libraryShowLanguage: boolean
     libraryShowNumbersOfItems: boolean
+    locale: any
     onlyIncludePinnedSources: boolean
     pagePreloadAmount: number
+    personalPageModeList: PersonalPageModeList[]
     personalReaderModeList: PersonalReaderModeList[]
     pureBlackDarkMode: boolean
     relativeTimesTamps: number
     saveAsCBZArchive: boolean
     scaleType: number
-    showNSFW: boolean
     showPagesNumber: boolean
     sortChapterList: SortChapterList[]
+    autoScrollPages: any
     sortLibraryAnime: any
+    sortLibraryManga: any
     themeIsDark: boolean
     userAgent: string
-    backupFrequency: number
-    backupFrequencyOptions: number[]
-    syncOnAppLaunch: boolean
-    syncAfterReading: boolean
-    autoBackupLocation: string
-    startDatebackup: number
+    backupFrequency: any
+    backupListOptions: any
+    autoBackupLocation: any
+    startDatebackup: any
     usePageTapZones: boolean
     markEpisodeAsSeenType: number
     defaultSkipIntroLength: number
     defaultDoubleTapToSkipLength: number
     defaultPlayBackSpeed: number
+    fullScreenPlayer: any
     updateProgressAfterReading: boolean
     enableAniSkip: any
     enableAutoSkip: any
     aniSkipTimeoutLength: any
     btServerAddress: string
     btServerPort: any
-    fullScreenReader: boolean
+    fullScreenReader: any
+    customColorFilter: CustomColorFilter
     enableCustomColorFilter: boolean
     colorFilterBlendMode: number
-    playerSubtitleSettings: PlayerSubtitleSettings | null
+    playerSubtitleSettings: PlayerSubtitleSettings
     mangaHomeDisplayType: number
     appFontFamily: any
     mangaGridSize: any
     animeGridSize: any
     disableSectionType: number
     useLibass: boolean
+    libraryFilterNovelBookMarkedType: any
+    libraryFilterNovelDownloadType: any
+    libraryFilterNovelStartedType: any
+    libraryFilterNovelUnreadType: any
+    novelLibraryShowCategoryTabs: any
+    novelLibraryDownloadedChapters: any
+    novelLibraryShowLanguage: any
+    novelLibraryShowNumbersOfItems: any
+    novelLibraryShowContinueReadingButton: any
+    novelLibraryLocalSource: any
+    sortLibraryNovel: any
+    novelDisplayType: number
+    novelFontSize: number
+    novelTextAlign: number
+    hideManga: boolean
+    hideAnime: boolean
+    hideNovel: boolean
+    clearChapterCacheOnAppLaunch: any
 }
 
 export interface ChapterFilterBookmarkedList {
@@ -214,8 +235,23 @@ export interface ChapterPageIndexList {
 
 export interface ChapterPageUrlsList {
     chapterId: number
-    urls: string[]
+    urls?: string[]
     headers: any
+}
+
+export interface CookiesList {
+    host: string
+    cookie: string
+}
+
+export interface FilterScanlatorList {
+    mangaId: number
+    scanlators: string[]
+}
+
+export interface PersonalPageModeList {
+    mangaId: number
+    pageMode: number
 }
 
 export interface PersonalReaderModeList {
@@ -227,6 +263,13 @@ export interface SortChapterList {
     index: number
     mangaId: number
     reverse: boolean
+}
+
+export interface CustomColorFilter {
+    a: number
+    r: number
+    g: number
+    b: number
 }
 
 export interface PlayerSubtitleSettings {
@@ -260,7 +303,8 @@ export interface Extension {
     isActive: boolean
     isAdded: boolean
     isFullData: boolean
-    isManga: boolean
+    isManga?: boolean
+    itemType: number
     isNsfw: boolean
     isPinned: boolean
     lang: string
