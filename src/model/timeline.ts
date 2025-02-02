@@ -1,16 +1,17 @@
 import { DataTypes, Model } from "sequelize";
 import { db } from "../database.js";
 
-export class Snapshot extends Model {
+export class Timeline extends Model {
     declare id: string;
     declare user: string;
+    declare action: number;
     declare data: string;
-    declare version: number;
+    declare clientDate: string;
 }
 
 const sequelize = db.sequelize;
 
-Snapshot.init({
+Timeline.init({
     id: {
         type: DataTypes.UUID,
         primaryKey: true,
@@ -21,16 +22,20 @@ Snapshot.init({
         type: DataTypes.UUID,
         allowNull: false,
     },
+    action: {
+        type: DataTypes.NUMBER,
+        allowNull: false,
+    },
     data: {
         type: "MEDIUMTEXT",
         allowNull: true,
     },
-    version: {
-        type: DataTypes.NUMBER,
+    clientDate: {
+        type: DataTypes.DATE,
         allowNull: false,
     },
 }, {
-    tableName: "snapshots",
+    tableName: "timelines",
     sequelize,
     paranoid: true,
     createdAt: "dbCreatedAt",
