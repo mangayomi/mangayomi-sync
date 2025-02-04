@@ -14,6 +14,8 @@ import {
   Manga,
   Track,
 } from "./model/backup.js";
+import { plainToInstance } from "class-transformer";
+import { TimelineDTO, validateDto } from "./dto/dto.js";
 
 export function registerEndpoints(app: Express): void {
   /**
@@ -149,9 +151,9 @@ export function registerEndpoints(app: Express): void {
   /**
    * @author Schnitzel5
    * @version 1.0.0
-   * This secured endpoint receives the full backup of the client and overwrites the current backup.
+   * This secured endpoint receives a list of tracked changes (timelines) which modifies the current sync data.
    */
-  app.post("/upload/full", async (req, res) => {
+  app.patch("/sync", async (req, res) => {
     let decodedData: any;
     try {
       const auth = req.headers.authorization;
@@ -166,6 +168,12 @@ export function registerEndpoints(app: Express): void {
       }
     } catch (error: any) {
       res.status(401).json({ error: error.message });
+      return;
+    }
+    const dto = plainToInstance(TimelineDTO, req.body);
+    const valid = await validateDto(dto);
+    if (!valid) {
+      res.status(400).json({ error: "Invalid data" });
       return;
     }
     const transaction = await db.sequelize.transaction();
@@ -176,10 +184,8 @@ export function registerEndpoints(app: Express): void {
         },
       });
       if (user != null) {
-        user.backupData =
-          typeof req.body.backupData === "string"
-            ? req.body.backupData
-            : JSON.stringify(req.body.backupData);
+        // patch user.backupData
+        //user.backupData = ;
         await user.save({ transaction: transaction });
         res.status(200).json({ backupData: user.backupData });
         await transaction.commit();
@@ -190,52 +196,6 @@ export function registerEndpoints(app: Express): void {
     } catch (error: any) {
       await transaction.rollback();
       console.log("Sync failed: ", error);
-      res.status(500).json({ error: "Server error" });
-    }
-  });
-
-  /**
-   * @author Schnitzel5
-   * @version 1.0.0
-   * This secured endpoint sends the full backup from the DB to the client.
-   */
-  app.get("/download", async (req, res) => {
-    let decodedData: any;
-    try {
-      const auth = req.headers.authorization;
-      if (auth && auth.split(" ").length > 1) {
-        decodedData = jwt.verify(
-          auth.split(" ")[1],
-          process.env.JWT_SECRET_KEY ?? "sugoireads"
-        );
-      } else {
-        res.status(401).json({ error: "Missing token" });
-        return;
-      }
-    } catch (error: any) {
-      res.status(401).json({ error: error.message });
-      return;
-    }
-    try {
-      const user = await User.findOne({
-        where: {
-          email: decodedData.email,
-        },
-      });
-      if (user != null) {
-        res
-          .status(200)
-          .json({
-            backupData:
-              req.query.type === "raw"
-                ? JSON.parse(user.backupData ?? "")
-                : user.backupData,
-          });
-        return;
-      }
-      res.status(401).json({ error: "Invalid token" });
-    } catch (error: any) {
-      console.log("Download failed: ", error);
       res.status(500).json({ error: "Server error" });
     }
   });
