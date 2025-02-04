@@ -5,7 +5,6 @@ export class Snapshot extends Model {
     declare id: string;
     declare user: string;
     declare data: string;
-    declare version: number;
 }
 
 const sequelize = db.sequelize;
@@ -24,10 +23,6 @@ Snapshot.init({
     data: {
         type: "MEDIUMTEXT",
         allowNull: true,
-    },
-    version: {
-        type: DataTypes.NUMBER,
-        allowNull: false,
     },
 }, {
     tableName: "snapshots",
