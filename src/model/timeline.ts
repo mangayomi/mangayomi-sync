@@ -4,10 +4,10 @@ import { db } from "../database.js";
 export class Timeline extends Model {
     declare id: string;
     declare user: string;
-    declare action: string;
+    declare actionType: string;
     declare isarId: number;
-    declare data: string;
-    declare clientDate: string;
+    declare backupData: string;
+    declare clientDate: number;
 }
 
 const sequelize = db.sequelize;
@@ -23,26 +23,27 @@ Timeline.init({
         type: DataTypes.UUID,
         allowNull: false,
     },
-    action: {
+    actionType: {
         type: DataTypes.TEXT,
         allowNull: false,
     },
     isarId: {
-        type: DataTypes.NUMBER,
-        allowNull: false,
+        type: DataTypes.INTEGER,
+        allowNull: true,
     },
-    data: {
+    backupData: {
         type: "MEDIUMTEXT",
         allowNull: true,
     },
     clientDate: {
-        type: DataTypes.DATE,
+        type: DataTypes.BIGINT,
         allowNull: false,
     },
 }, {
     tableName: "timelines",
     sequelize,
     paranoid: true,
+    timestamps: true,
     createdAt: "dbCreatedAt",
     updatedAt: "dbUpdatedAt",
     deletedAt: "dbDeletedAt",

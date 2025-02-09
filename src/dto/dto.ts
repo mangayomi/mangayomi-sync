@@ -14,6 +14,7 @@ export enum ActionType {
   CLEAR_HISTORY = "CLEAR_HISTORY",
   ADD_HISTORY = "ADD_HISTORY",
   REMOVE_HISTORY = "REMOVE_HISTORY",
+  UPDATE_HISTORY = "UPDATE_HISTORY",
   CLEAR_UPDATES = "CLEAR_UPDATES",
   ADD_UPDATE = "ADD_UPDATE",
   ADD_EXTENSION = "ADD_EXTENSION",
@@ -21,6 +22,7 @@ export enum ActionType {
   UPDATE_EXTENSION = "UPDATE_EXTENSION",
   ADD_TRACK = "ADD_TRACK",
   REMOVE_TRACK = "REMOVE_TRACK",
+  UPDATE_TRACK = "UPDATE_TRACK",
 }
 
 export class UserDTO {
@@ -39,14 +41,14 @@ export class ChangedDTO {
 };
 
 export class ChangedPart {
-  @IsNumber()
+  @Length(0, 128)
   action!: string;
   @IsNumber()
   @IsOptional()
   isarId?: number;
   @Length(0, 2048)
   data!: string;
-  @IsDate()
+  @IsNumber()
   clientDate!: number;
 };
 

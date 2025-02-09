@@ -1,6 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { db } from "../database.js";
 import { Snapshot } from "./snapshot.js";
+import { Timeline } from "./timeline.js";
 
 export class User extends Model {
     declare id: string;
@@ -41,6 +42,7 @@ User.init({
     tableName: "users",
     sequelize,
     paranoid: true,
+    timestamps: true,
     createdAt: "dbCreatedAt",
     updatedAt: "dbUpdatedAt",
     deletedAt: "dbDeletedAt",
@@ -50,3 +52,8 @@ User.hasMany(Snapshot, {
     foreignKey: "user",
 });
 Snapshot.belongsTo(User);
+
+User.hasMany(Timeline, {
+    foreignKey: "user",
+});
+Timeline.belongsTo(User);

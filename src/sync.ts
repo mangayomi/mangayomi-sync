@@ -16,13 +16,13 @@ import {
 } from "./model/backup.js";
 import { plainToInstance } from "class-transformer";
 import { ActionType, ChangedDTO, ChangedPart, validateDto } from "./dto/dto.js";
-import { Timeline } from "./model/changed.js";
+import { Timeline } from "./model/timeline.js";
 
 export function registerEndpoints(app: Express): void {
   /**
    * @author Schnitzel5
    * @version 1.1
-   * This secured endpoint responds a "remote" hash of the logged users'
+   * This secured endpoint responds with a "remote" hash of the logged users'
    * backup data which is compared to the "local" hash.
    * If the hash differs, then the client should retrieve the latest remote version 
    * after pushing its local changes.
@@ -69,7 +69,6 @@ export function registerEndpoints(app: Express): void {
           tracks: Track[];
           history: History[];
           updates: Update[];
-          extensions: Extension[];
         } = {
           version: backup.version,
           manga: backup.manga,
@@ -78,7 +77,6 @@ export function registerEndpoints(app: Express): void {
           tracks: backup.tracks,
           history: backup.history,
           updates: backup.updates,
-          extensions: backup.extensions,
         };
         hash.update(
           Buffer.from(JSON.stringify(filteredBackup)).toString("utf-8")
@@ -133,12 +131,34 @@ export function registerEndpoints(app: Express): void {
           res.status(400).json({ error: "No remote data available" });
           return;
         }
-        const patchedBackup = patchBackup(user, JSON.parse(user.backupData), dto.changedParts);
+        const temp = await patchBackup(user, JSON.parse(user.backupData), dto.changedParts);
+        const patchedBackup = JSON.stringify(temp);
         user.backupData = typeof patchedBackup === "string"
           ? patchedBackup
           : JSON.stringify(patchedBackup);
         await user.save({ transaction: transaction });
-        res.status(200).json({ backupData: user.backupData });
+        const filteredBackup: {
+          version: string;
+          manga: Manga[];
+          categories: Category[];
+          chapters: Chapter[];
+          tracks: Track[];
+          history: History[];
+          updates: Update[];
+        } = {
+          version: temp.version,
+          manga: temp.manga,
+          categories: temp.categories,
+          chapters: temp.chapters,
+          tracks: temp.tracks,
+          history: temp.history,
+          updates: temp.updates,
+        };
+        const hash = crypto.createHash("sha256");
+        hash.update(
+          Buffer.from(JSON.stringify(filteredBackup)).toString("utf-8")
+        );
+        res.status(200).json({ hash: hash.digest("hex") });
         await transaction.commit();
         return;
       }
@@ -152,13 +172,22 @@ export function registerEndpoints(app: Express): void {
   });
 }
 
-function patchBackup(
+async function patchBackup(
   user: User,
   backup: BackupData,
   changes: ChangedPart[]
-): string {
-  changes.sort((c1, c2) => c1.clientDate - c2.clientDate).forEach(async change => {
+): Promise<BackupData> {
+  for (const change of changes.sort((c1, c2) => c2.clientDate - c1.clientDate)) {
     try {
+      if (change.action.startsWith("UPDATE_")) {
+        await Timeline.create({
+          user: user.id,
+          actionType: change.action,
+          isarId: change.isarId,
+          backupData: change.data,
+          clientDate: change.clientDate
+        });
+      }
       let idx;
       let existing;
       switch (change.action) {
@@ -167,12 +196,15 @@ function patchBackup(
           break;
         case ActionType.REMOVE_ITEM:
           backup.manga = backup.manga.filter(m => m.id !== change.isarId);
+          backup.chapters = backup.chapters.filter(ch => ch.mangaId !== change.isarId);
+          backup.history = backup.history.filter(h => h.mangaId !== change.isarId);
+          backup.updates = backup.updates.filter(u => u.mangaId !== change.isarId);
           break;
         case ActionType.UPDATE_ITEM:
           existing = await Timeline.findOne({
             where: {
               user: user.id,
-              action: change.action,
+              actionType: change.action,
               isarId: change.isarId,
             },
             order: [["clientDate", "DESC"]],
@@ -216,7 +248,7 @@ function patchBackup(
           existing = await Timeline.findOne({
             where: {
               user: user.id,
-              action: change.action,
+              actionType: change.action,
               isarId: change.isarId,
             },
             order: [["clientDate", "DESC"]],
@@ -235,7 +267,27 @@ function patchBackup(
           backup.history.push(JSON.parse(change.data) as History);
           break;
         case ActionType.REMOVE_HISTORY:
+          const history = backup.history.find(h => h.id === change.isarId);
           backup.history = backup.history.filter(h => h.id !== change.isarId);
+          backup.manga = backup.manga.filter(m => m.id !== history?.mangaId);
+          backup.chapters = backup.chapters.filter(ch => ch.mangaId !== history?.mangaId);
+          backup.updates = backup.updates.filter(u => u.mangaId !== history?.mangaId);
+          break;
+        case ActionType.UPDATE_HISTORY:
+          existing = await Timeline.findOne({
+            where: {
+              user: user.id,
+              actionType: change.action,
+              isarId: change.isarId,
+            },
+            order: [["clientDate", "DESC"]],
+          });
+          if (existing?.clientDate ?? 0 < change.clientDate) {
+            idx = backup.history.findIndex(h => h.id === change.isarId);
+            if (idx != -1) {
+              backup.history[idx] = JSON.parse(change.data) as History;
+            }
+          }
           break;
         case ActionType.CLEAR_UPDATES:
           backup.updates = [];
@@ -253,7 +305,7 @@ function patchBackup(
           existing = await Timeline.findOne({
             where: {
               user: user.id,
-              action: change.action,
+              actionType: change.action,
               isarId: change.isarId,
             },
             order: [["clientDate", "DESC"]],
@@ -271,13 +323,29 @@ function patchBackup(
         case ActionType.REMOVE_TRACK:
           backup.tracks = backup.tracks.filter(tr => tr.id !== change.isarId);
           break;
+        case ActionType.UPDATE_TRACK:
+          existing = await Timeline.findOne({
+            where: {
+              user: user.id,
+              actionType: change.action,
+              isarId: change.isarId,
+            },
+            order: [["clientDate", "DESC"]],
+          });
+          if (existing?.clientDate ?? 0 < change.clientDate) {
+            idx = backup.tracks.findIndex(tr => tr.id === change.isarId);
+            if (idx != -1) {
+              backup.tracks[idx] = JSON.parse(change.data) as Track;
+            }
+          }
+          break;
         default:
           console.log("Unknown action: ", change);
       }
     } catch (e) {
       console.error("Error processing change: ", change);
     }
-  });
+  }
 
-  return JSON.stringify(backup);
+  return backup;
 }

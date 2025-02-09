@@ -8,7 +8,7 @@ The self-hosted sync server for SugoiReads.
 - MySQL Server (tested and working with Version 8.0.29)
 - [pnpm](https://pnpm.io/) (you can also use the normal npm if you prefer it)
 
-## Setup
+## Setup - Local
 
 1. Install Node.js (if you have already installed it, you can skip this) \
 Go to the [Official guide](https://nodejs.org/en/download/package-manager), change the OS to yours and follow the steps.
@@ -28,6 +28,15 @@ If you are using your own server on a VPS or home lab, type "mysql://USERNAME:PA
 8. Now run ```pnpm install``` to install the dependencies. 
 9. Now run ```pnpm run buildstart``` to run the server. 
 
+## Setup - Docker Compose
+1. Install [Docker](https://docs.docker.com/engine/install/).  
+    Most installations will come with Compose included, but it can also be [installed manually](https://docs.docker.com/compose/install/).
+2. Make a copy of the `.env.docker` file by running `cat .env.docker >> .env`.  
+    Changing the default passwords is strongly recommended, even when running locally.  
+    `CORS_ORIGIN_URL` should be set to your domain if you are planning to expose this service.  
+3. Run the project with `docker compose up -d`
+4. Connect to the sync server using the port set in `.env`.  
+    By default, the server will be reachable at `http://localhost:3000`
 
 ## How to use it on the client
 Go to Settings -> Sync:

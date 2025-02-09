@@ -28,6 +28,7 @@ Snapshot.init({
     tableName: "snapshots",
     sequelize,
     paranoid: true,
+    timestamps: true,
     createdAt: "dbCreatedAt",
     updatedAt: "dbUpdatedAt",
     deletedAt: "dbDeletedAt",

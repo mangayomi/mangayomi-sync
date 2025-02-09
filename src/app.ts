@@ -1,3 +1,4 @@
+import "reflect-metadata"
 import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import cors from "cors";
