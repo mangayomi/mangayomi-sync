@@ -177,7 +177,7 @@ async function patchBackup(
   backup: BackupData,
   changes: ChangedPart[]
 ): Promise<BackupData> {
-  for (const change of changes.sort((c1, c2) => c2.clientDate - c1.clientDate)) {
+  for (const change of changes.sort((c1, c2) => c1.clientDate - c2.clientDate)) {
     try {
       if (change.action.startsWith("UPDATE_")) {
         await Timeline.create({
