@@ -209,7 +209,7 @@ async function patchBackup(
             },
             order: [["clientDate", "DESC"]],
           });
-          if (existing?.clientDate ?? 0 < change.clientDate) {
+          if (existing == null || (existing?.clientDate ?? 0 < change.clientDate)) {
             idx = backup.manga.findIndex(m => m.id === change.isarId);
             if (idx != -1) {
               backup.manga[idx] = JSON.parse(change.data) as Manga;
@@ -231,7 +231,7 @@ async function patchBackup(
             },
             order: [["clientDate", "DESC"]],
           });
-          if (existing?.clientDate ?? 0 < change.clientDate) {
+          if (existing == null || (existing?.clientDate ?? 0 < change.clientDate)) {
             idx = backup.categories.findIndex(cat => cat.id === change.isarId);
             if (idx != -1) {
               backup.categories[idx] = JSON.parse(change.data) as Category;
@@ -253,7 +253,7 @@ async function patchBackup(
             },
             order: [["clientDate", "DESC"]],
           });
-          if (existing?.clientDate ?? 0 < change.clientDate) {
+          if (existing == null || (existing?.clientDate ?? 0 < change.clientDate)) {
             idx = backup.chapters.findIndex(ch => ch.id === change.isarId);
             if (idx != -1) {
               backup.chapters[idx] = JSON.parse(change.data) as Chapter;
@@ -282,7 +282,7 @@ async function patchBackup(
             },
             order: [["clientDate", "DESC"]],
           });
-          if (existing?.clientDate ?? 0 < change.clientDate) {
+          if (existing == null || (existing?.clientDate ?? 0 < change.clientDate)) {
             idx = backup.history.findIndex(h => h.id === change.isarId);
             if (idx != -1) {
               backup.history[idx] = JSON.parse(change.data) as History;
@@ -310,7 +310,7 @@ async function patchBackup(
             },
             order: [["clientDate", "DESC"]],
           });
-          if (existing?.clientDate ?? 0 < change.clientDate) {
+          if (existing == null || (existing?.clientDate ?? 0 < change.clientDate)) {
             idx = backup.extensions.findIndex(ext => ext.id === change.isarId);
             if (idx != -1) {
               backup.extensions[idx] = JSON.parse(change.data) as Extension;
@@ -332,7 +332,7 @@ async function patchBackup(
             },
             order: [["clientDate", "DESC"]],
           });
-          if (existing?.clientDate ?? 0 < change.clientDate) {
+          if (existing == null || (existing?.clientDate ?? 0 < change.clientDate)) {
             idx = backup.tracks.findIndex(tr => tr.id === change.isarId);
             if (idx != -1) {
               backup.tracks[idx] = JSON.parse(change.data) as Track;
