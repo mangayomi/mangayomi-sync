@@ -4,7 +4,6 @@ import crypto from "node:crypto";
 import { Buffer } from "node:buffer";
 import jwt from "jsonwebtoken";
 import { db } from "./database.js";
-import { mergeProgress } from "./merge.js";
 import {
   BackupData,
   Category,
@@ -13,17 +12,20 @@ import {
   History,
   Manga,
   Track,
+  Extension,
 } from "./model/backup.js";
 import { plainToInstance } from "class-transformer";
-import { TimelineDTO, validateDto } from "./dto/dto.js";
+import { ActionType, ChangedDTO, ChangedPart, validateDto } from "./dto/dto.js";
+import { Timeline } from "./model/changed.js";
 
 export function registerEndpoints(app: Express): void {
   /**
    * @author Schnitzel5
-   * @version 1.0.0
+   * @version 1.1
    * This secured endpoint responds a "remote" hash of the logged users'
    * backup data which is compared to the "local" hash.
-   * If the hash differs, then the progress should be synced.
+   * If the hash differs, then the client should retrieve the latest remote version 
+   * after pushing its local changes.
    */
   app.get("/check", async (req, res) => {
     let decodedData: any;
@@ -67,6 +69,7 @@ export function registerEndpoints(app: Express): void {
           tracks: Track[];
           history: History[];
           updates: Update[];
+          extensions: Extension[];
         } = {
           version: backup.version,
           manga: backup.manga,
@@ -75,6 +78,7 @@ export function registerEndpoints(app: Express): void {
           tracks: backup.tracks,
           history: backup.history,
           updates: backup.updates,
+          extensions: backup.extensions,
         };
         hash.update(
           Buffer.from(JSON.stringify(filteredBackup)).toString("utf-8")
@@ -91,14 +95,8 @@ export function registerEndpoints(app: Express): void {
 
   /**
    * @author Schnitzel5
-   * @version 1.0.0
-   * This secured endpoint receives local data of a client and merges the progress for following:
-   * - manga
-   * - chapters
-   * - categories
-   * - tracks
-   * - history
-   * the merged data is sent back to the client
+   * @version 1.0
+   * This secured endpoint receives a list of tracked changes which modifies the remote backup data.
    */
   app.post("/sync", async (req, res) => {
     let decodedData: any;
@@ -117,60 +115,7 @@ export function registerEndpoints(app: Express): void {
       res.status(401).json({ error: error.message });
       return;
     }
-    const transaction = await db.sequelize.transaction();
-    try {
-      const user = await User.findOne({
-        where: {
-          email: decodedData.email,
-        },
-      });
-      if (user != null) {
-        const mergedData = mergeProgress(
-          JSON.parse(user.backupData ?? "{}"),
-          req.body.backupData,
-          req.body.changedItems
-        );
-        user.backupData =
-          typeof mergedData === "string"
-            ? mergedData
-            : JSON.stringify(mergedData);
-        await user.save({ transaction: transaction });
-        res.status(200).json({ backupData: user.backupData });
-        await transaction.commit();
-        return;
-      }
-      res.status(401).json({ error: "Invalid token" });
-      await transaction.commit();
-    } catch (error: any) {
-      await transaction.rollback();
-      console.log("Sync failed: ", error);
-      res.status(500).json({ error: "Server error" });
-    }
-  });
-
-  /**
-   * @author Schnitzel5
-   * @version 1.0.0
-   * This secured endpoint receives a list of tracked changes (timelines) which modifies the current sync data.
-   */
-  app.patch("/sync", async (req, res) => {
-    let decodedData: any;
-    try {
-      const auth = req.headers.authorization;
-      if (auth && auth.split(" ").length > 1) {
-        decodedData = jwt.verify(
-          auth.split(" ")[1],
-          process.env.JWT_SECRET_KEY ?? "sugoireads"
-        );
-      } else {
-        res.status(401).json({ error: "Missing token" });
-        return;
-      }
-    } catch (error: any) {
-      res.status(401).json({ error: error.message });
-      return;
-    }
-    const dto = plainToInstance(TimelineDTO, req.body);
+    const dto = plainToInstance(ChangedDTO, req.body);
     const valid = await validateDto(dto);
     if (!valid) {
       res.status(400).json({ error: "Invalid data" });
@@ -184,8 +129,14 @@ export function registerEndpoints(app: Express): void {
         },
       });
       if (user != null) {
-        // patch user.backupData
-        //user.backupData = ;
+        if (user.backupData == null) {
+          res.status(400).json({ error: "No remote data available" });
+          return;
+        }
+        const patchedBackup = patchBackup(user, JSON.parse(user.backupData), dto.changedParts);
+        user.backupData = typeof patchedBackup === "string"
+          ? patchedBackup
+          : JSON.stringify(patchedBackup);
         await user.save({ transaction: transaction });
         res.status(200).json({ backupData: user.backupData });
         await transaction.commit();
@@ -199,4 +150,134 @@ export function registerEndpoints(app: Express): void {
       res.status(500).json({ error: "Server error" });
     }
   });
+}
+
+function patchBackup(
+  user: User,
+  backup: BackupData,
+  changes: ChangedPart[]
+): string {
+  changes.sort((c1, c2) => c1.clientDate - c2.clientDate).forEach(async change => {
+    try {
+      let idx;
+      let existing;
+      switch (change.action) {
+        case ActionType.ADD_ITEM:
+          backup.manga.push(JSON.parse(change.data) as Manga);
+          break;
+        case ActionType.REMOVE_ITEM:
+          backup.manga = backup.manga.filter(m => m.id !== change.isarId);
+          break;
+        case ActionType.UPDATE_ITEM:
+          existing = await Timeline.findOne({
+            where: {
+              user: user.id,
+              action: change.action,
+              isarId: change.isarId,
+            },
+            order: [["clientDate", "DESC"]],
+          });
+          if (existing?.clientDate ?? 0 < change.clientDate) {
+            idx = backup.manga.findIndex(m => m.id === change.isarId);
+            if (idx != -1) {
+              backup.manga[idx] = JSON.parse(change.data) as Manga;
+            }
+          }
+          break;
+        case ActionType.ADD_CATEGORY:
+          backup.categories.push(JSON.parse(change.data) as Category);
+          break;
+        case ActionType.REMOVE_CATEGORY:
+          backup.categories = backup.categories.filter(cat => cat.id !== change.isarId);
+          break;
+        case ActionType.RENAME_CATEGORY:
+          existing = await Timeline.findOne({
+            where: {
+              user: user.id,
+              action: change.action,
+              isarId: change.isarId,
+            },
+            order: [["clientDate", "DESC"]],
+          });
+          if (existing?.clientDate ?? 0 < change.clientDate) {
+            idx = backup.categories.findIndex(cat => cat.id === change.isarId);
+            if (idx != -1) {
+              backup.categories[idx] = JSON.parse(change.data) as Category;
+            }
+          }
+          break;
+        case ActionType.ADD_CHAPTER:
+          backup.chapters.push(JSON.parse(change.data) as Chapter);
+          break;
+        case ActionType.REMOVE_CHAPTER:
+          backup.chapters = backup.chapters.filter(ch => ch.id !== change.isarId);
+          break;
+        case ActionType.UPDATE_CHAPTER:
+          existing = await Timeline.findOne({
+            where: {
+              user: user.id,
+              action: change.action,
+              isarId: change.isarId,
+            },
+            order: [["clientDate", "DESC"]],
+          });
+          if (existing?.clientDate ?? 0 < change.clientDate) {
+            idx = backup.chapters.findIndex(ch => ch.id === change.isarId);
+            if (idx != -1) {
+              backup.chapters[idx] = JSON.parse(change.data) as Chapter;
+            }
+          }
+          break;
+        case ActionType.CLEAR_HISTORY:
+          backup.history = [];
+          break;
+        case ActionType.ADD_HISTORY:
+          backup.history.push(JSON.parse(change.data) as History);
+          break;
+        case ActionType.REMOVE_HISTORY:
+          backup.history = backup.history.filter(h => h.id !== change.isarId);
+          break;
+        case ActionType.CLEAR_UPDATES:
+          backup.updates = [];
+          break;
+        case ActionType.ADD_UPDATE:
+          backup.updates.push(JSON.parse(change.data) as Update);
+          break;
+        case ActionType.ADD_EXTENSION:
+          backup.extensions.push(JSON.parse(change.data) as Extension);
+          break;
+        case ActionType.REMOVE_EXTENSION:
+          backup.extensions = backup.extensions.filter(ext => ext.id !== change.isarId);
+          break;
+        case ActionType.UPDATE_EXTENSION:
+          existing = await Timeline.findOne({
+            where: {
+              user: user.id,
+              action: change.action,
+              isarId: change.isarId,
+            },
+            order: [["clientDate", "DESC"]],
+          });
+          if (existing?.clientDate ?? 0 < change.clientDate) {
+            idx = backup.extensions.findIndex(ext => ext.id === change.isarId);
+            if (idx != -1) {
+              backup.extensions[idx] = JSON.parse(change.data) as Extension;
+            }
+          }
+          break;
+        case ActionType.ADD_TRACK:
+          backup.tracks.push(JSON.parse(change.data) as Track);
+          break;
+        case ActionType.REMOVE_TRACK:
+          backup.tracks = backup.tracks.filter(tr => tr.id !== change.isarId);
+          break;
+        default:
+          console.log("Unknown action: ", change);
+      }
+    } catch (e) {
+      console.error("Error processing change: ", change);
+    }
+  });
+
+  return JSON.stringify(backup);
 }

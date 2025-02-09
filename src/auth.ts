@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 export function registerEndpoints(app: Express): void {
   /**
    * @author Schnitzel5
-   * @version 1.0.0
+   * @version 1.0
    * This endpoint is the entrypoint to retrieve the JWT token required
    * for all other secured endpoints (upload, download, ...).
    */

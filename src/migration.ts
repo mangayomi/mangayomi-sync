@@ -19,8 +19,8 @@ const upload = multer({
 export function registerEndpoints(app: Express): void {
   /**
    * @author Schnitzel5
-   * @version 1.0.0
-   * This endpoint migrates a kotatsu backup into a mangayomi backup.
+   * @version 1.1
+   * This endpoint migrates a Kotatsu backup into a SugoiReads backup.
    */
   app.post("/migrate/kotatsu", upload.single("backup"), async (req, res) => {
     try {
@@ -78,11 +78,6 @@ export function registerEndpoints(app: Express): void {
         })
       );
       const droppedMangas: number[] = [];
-      console.log("Processing settings...");
-      if (settings) {
-        // processSettings(backup, settings);
-        await processSources(backup, settings);
-      }
       console.log("Processing categories...");
       if (categories) {
         processCategories(backup, categories);
@@ -108,7 +103,7 @@ export function registerEndpoints(app: Express): void {
       )}_${handleDigits(date.getMinutes())}_${handleDigits(
         date.getSeconds()
       )}.${date.getMilliseconds()}`;
-      const fileName = `mangayomi_${dateString}_.backup`;
+      const fileName = `SugoiReads_${dateString}_.backup`;
       var mimetype = "application/json";
       res.setHeader("Content-Type", mimetype);
       res.setHeader("Content-disposition", "attachment; filename=" + fileName);
@@ -136,7 +131,7 @@ function processCategories(backup: BackupData, categories: Categories) {
     backup.categories.push({
       id: categories[i].category_id,
       name: categories[i].title,
-      forManga: true,
+      forItemType: 0,
     });
   }
 }
@@ -163,7 +158,7 @@ async function processFavourites(
     backup.manga.push({
       id: mangaId,
       categories: [manga.category_id],
-      isManga: true,
+      itemType: 0,
       name: manga.manga.title,
       link: `/manga/${manga.manga.url}`,
       author: manga.manga.author ?? "",
@@ -178,7 +173,7 @@ async function processFavourites(
       description: "",
       isLocalArchive: false,
       lang: "en",
-      imageUrl: "https://furnace.30062022.xyz/cover.jpg",
+      imageUrl: "",
       status: 0,
       source: manga.manga.source,
     });
@@ -339,7 +334,7 @@ function processHistories(
     }
     backup.history.push({
       id: i + 1,
-      isManga: true,
+      itemType: 0,
       mangaId: mangaIds.get(history.manga_id) ?? history.manga_id,
       chapterId: chapterIds.get(history.chapter_id) ?? history.chapter_id,
       date: String(history.updated_at),
@@ -349,130 +344,6 @@ function processHistories(
       readChapter[0].isRead = true;
     }
   }
-}
-
-function processSettings(backup: BackupData, settings: Settings) {
-  backup.settings.push({
-    id: 227,
-    animatePageTransitions: true,
-    animeDisplayType: 0,
-    animeLibraryDownloadedChapters: false,
-    animeLibraryLocalSource: null,
-    animeLibraryShowCategoryTabs: false,
-    animeLibraryShowContinueReadingButton: false,
-    animeLibraryShowLanguage: false,
-    animeLibraryShowNumbersOfItems: false,
-    autoExtensionsUpdates: false,
-    backgroundColor: 0,
-    chapterFilterBookmarkedList: [],
-    chapterFilterDownloadedList: [],
-    chapterFilterUnreadList: [],
-    chapterPageIndexList: [],
-    chapterPageUrlsList: [],
-    checkForExtensionUpdates: true,
-    cookiesList: null,
-    cropBorders: false,
-    dateFormat: "M/d/y",
-    defaultReaderMode: 2,
-    displayType: 0,
-    doubleTapAnimationSpeed: 1,
-    downloadLocation: "",
-    downloadOnlyOnWifi: false,
-    filterScanlatorList: null,
-    flexColorSchemeBlendLevel: 10,
-    flexSchemeColorIndex: 51,
-    incognitoMode: false,
-    libraryDownloadedChapters: false,
-    libraryFilterAnimeBookMarkedType: 0,
-    libraryFilterAnimeDownloadType: 0,
-    libraryFilterAnimeStartedType: 0,
-    libraryFilterAnimeUnreadType: 0,
-    libraryFilterMangasBookMarkedType: 0,
-    libraryFilterMangasDownloadType: 0,
-    libraryFilterMangasStartedType: 0,
-    libraryFilterMangasUnreadType: 0,
-    libraryLocalSource: null,
-    libraryShowCategoryTabs: false,
-    libraryShowContinueReadingButton: false,
-    libraryShowLanguage: false,
-    libraryShowNumbersOfItems: false,
-    onlyIncludePinnedSources: false,
-    pagePreloadAmount: Number(settings.pages_preload),
-    personalReaderModeList: [],
-    pureBlackDarkMode: settings.amoled_theme,
-    relativeTimesTamps: 2,
-    saveAsCBZArchive: false,
-    scaleType: 0,
-    showNSFW: true,
-    showPagesNumber: true,
-    sortChapterList: [],
-    sortLibraryAnime: null,
-    themeIsDark: true,
-    userAgent:
-      "Mozilla/5.0 (Linux; Android 13; 22081212UG Build/TKQ1.220829.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/114.0.5735.131 Mobile Safari/537.36",
-    backupFrequency: 0,
-    backupFrequencyOptions: [0],
-    syncOnAppLaunch: true,
-    syncAfterReading: true,
-    autoBackupLocation: "",
-    startDatebackup: 0,
-    usePageTapZones: false,
-    markEpisodeAsSeenType: 85,
-    defaultSkipIntroLength: 85,
-    defaultDoubleTapToSkipLength: 10,
-    defaultPlayBackSpeed: 1,
-    updateProgressAfterReading: true,
-    enableAniSkip: false,
-    enableAutoSkip: null,
-    aniSkipTimeoutLength: null,
-    btServerAddress: "127.0.0.1",
-    btServerPort: null,
-    fullScreenReader: false,
-    enableCustomColorFilter: false,
-    colorFilterBlendMode: 0,
-    mangaHomeDisplayType: 1,
-    appFontFamily: null,
-    mangaGridSize: null,
-    animeGridSize: null,
-    disableSectionType: 0,
-    useLibass: true,
-    playerSubtitleSettings: null,
-  });
-}
-
-async function processSources(backup: BackupData, sources: Sources) {
-  const sourceCode = await axios.get("https://raw.githubusercontent.com/kodjodevf/mangayomi-extensions/main/dart/manga/src/all/mangadex/mangadex.dart"); 
-  backup.extensions.push({
-    apiUrl: "https://api.mangadex.org",
-    appMinVerReq: "0.2.0",
-    baseUrl: "https://mangadex.org",
-    dateFormat: "yyyy-MM-dd'T'HH:mm:ss+SSS",
-    dateFormatLocale: "en_Us",
-    hasCloudflare: false,
-    headers: "{}",
-    iconUrl:
-      "https://raw.githubusercontent.com/kodjodevf/mangayomi-extensions/main/dart/manga/src/all/mangadex/icon.png",
-    id: 810342358,
-    isActive: true,
-    isAdded: true,
-    isFullData: false,
-    isManga: true,
-    isNsfw: true,
-    isPinned: false,
-    lang: "en",
-    lastUsed: false,
-    name: "MangaDex",
-    sourceCode: String(sourceCode.data),
-    sourceCodeUrl:
-      "https://raw.githubusercontent.com/kodjodevf/mangayomi-extensions/main/dart/manga/src/all/mangadex/mangadex.dart",
-    typeSource: "mangadex",
-    version: "0.0.9",
-    versionLast: "0.0.9",
-    additionalParams: "",
-    sourceCodeLanguage: 0,
-    isObsolete: false,
-    isLocal: false,
-  });
 }
 
 function handleDigits(value: number): string {
