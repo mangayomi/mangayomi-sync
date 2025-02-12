@@ -61,23 +61,7 @@ export function registerEndpoints(app: Express): void {
             .json({ hash: hash.update(Buffer.from("")).digest("hex") });
           return;
         }
-        const filteredBackup: {
-          version: string;
-          manga: Manga[];
-          categories: Category[];
-          chapters: Chapter[];
-          tracks: Track[];
-          history: History[];
-          updates: Update[];
-        } = {
-          version: backup.version,
-          manga: backup.manga,
-          categories: backup.categories,
-          chapters: backup.chapters,
-          tracks: backup.tracks,
-          history: backup.history,
-          updates: backup.updates,
-        };
+        const filteredBackup = prepareForHashCheck(backup);
         hash.update(
           Buffer.from(JSON.stringify(filteredBackup)).toString("utf-8")
         );
@@ -137,23 +121,7 @@ export function registerEndpoints(app: Express): void {
           ? patchedBackup
           : JSON.stringify(patchedBackup);
         await user.save({ transaction: transaction });
-        const filteredBackup: {
-          version: string;
-          manga: Manga[];
-          categories: Category[];
-          chapters: Chapter[];
-          tracks: Track[];
-          history: History[];
-          updates: Update[];
-        } = {
-          version: temp.version,
-          manga: temp.manga,
-          categories: temp.categories,
-          chapters: temp.chapters,
-          tracks: temp.tracks,
-          history: temp.history,
-          updates: temp.updates,
-        };
+        const filteredBackup = prepareForHashCheck(temp);
         const hash = crypto.createHash("sha256");
         hash.update(
           Buffer.from(JSON.stringify(filteredBackup)).toString("utf-8")
@@ -348,4 +316,42 @@ async function patchBackup(
   }
 
   return backup;
+}
+
+function prepareForHashCheck(backup: BackupData): {
+  version: string;
+  manga: Manga[];
+  categories: Category[];
+  chapters: Chapter[];
+  tracks: Track[];
+  history: History[];
+  updates: Update[];
+} {
+  return {
+    version: backup.version,
+    manga: backup.manga.map(m => {
+      m.id = 0;
+      return m;
+    }),
+    categories: backup.categories.map(cat => {
+      cat.id = 0;
+      return cat;
+    }),
+    chapters: backup.chapters.map(chap => {
+      chap.id = 0;
+      return chap;
+    }),
+    tracks: backup.tracks.map(tr => {
+      tr.id = 0;
+      return tr;
+    }),
+    history: backup.history.map(h => {
+      h.id = 0;
+      return h;
+    }),
+    updates: backup.updates.map(u => {
+      u.id = 0;
+      return u;
+    }),
+  };
 }
