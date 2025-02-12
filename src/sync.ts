@@ -326,6 +326,7 @@ function prepareForHashCheck(backup: BackupData): {
   tracks: Track[];
   history: History[];
   updates: Update[];
+  extensions: Extension[];
 } {
   return {
     version: backup.version,
@@ -352,6 +353,10 @@ function prepareForHashCheck(backup: BackupData): {
     updates: backup.updates.map(u => {
       u.id = 0;
       return u;
+    }),
+    extensions: backup.extensions.map(ext => {
+      ext.id = 0;
+      return ext;
     }),
   };
 }
