@@ -47,7 +47,6 @@ export class ChangedPart {
   @IsNumber()
   @IsOptional()
   isarId?: number;
-  @Length(0, 2048)
   data!: string;
   @IsNumber()
   clientDate!: number;
