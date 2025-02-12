@@ -263,6 +263,10 @@ async function patchBackup(
         case ActionType.ADD_UPDATE:
           backup.updates.push(JSON.parse(change.data) as Update);
           break;
+        case ActionType.CLEAR_EXTENSION:
+          backup.extensions = [];
+          backup.extensions_preferences = [];
+          break;
         case ActionType.ADD_EXTENSION:
           backup.extensions.push(JSON.parse(change.data) as Extension);
           break;
