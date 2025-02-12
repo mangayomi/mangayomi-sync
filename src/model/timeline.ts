@@ -42,9 +42,8 @@ Timeline.init({
 }, {
     tableName: "timelines",
     sequelize,
-    paranoid: true,
+    paranoid: false,
     timestamps: true,
     createdAt: "dbCreatedAt",
     updatedAt: "dbUpdatedAt",
-    deletedAt: "dbDeletedAt",
 });
