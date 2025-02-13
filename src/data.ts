@@ -150,7 +150,7 @@ export function registerEndpoints(app: Express): void {
      * @version 1.0
      * This secured endpoint returns the backup of a specific snapshot that belongs to the user.
      */
-    app.get("/snapshot/:snapshotId(^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$)", async (req, res) => {
+    app.get("/snapshot/:snapshotId", async (req, res) => {
         let decodedData: any;
         try {
             const auth = req.headers.authorization;
@@ -248,7 +248,7 @@ export function registerEndpoints(app: Express): void {
      * @version 1.0
      * This secured endpoint deletes a specific snapshot that belongs to the user.
      */
-     app.delete("/snapshot/:snapshotId(^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$)", async (req, res) => {
+     app.delete("/snapshot/:snapshotId", async (req, res) => {
         let decodedData: any;
         try {
             const auth = req.headers.authorization;
