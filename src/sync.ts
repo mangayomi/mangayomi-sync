@@ -147,17 +147,27 @@ async function patchBackup(
 ): Promise<BackupData> {
   for (const change of changes.sort((c1, c2) => c1.clientDate - c2.clientDate)) {
     try {
+      let existing;
       if (change.action.startsWith("UPDATE_")) {
-        await Timeline.create({
-          user: user.id,
-          actionType: change.action,
-          isarId: change.isarId,
-          backupData: change.data,
-          clientDate: change.clientDate
+        existing = await Timeline.findOne({
+          where: {
+            user: user.id,
+            actionType: change.action,
+            isarId: change.isarId,
+          },
+          order: [["clientDate", "DESC"]],
         });
+        if (existing == null) {
+          await Timeline.create({
+            user: user.id,
+            actionType: change.action,
+            isarId: change.isarId,
+            backupData: "{}",
+            clientDate: change.clientDate
+          });
+        }
       }
       let idx;
-      let existing;
       switch (change.action) {
         case ActionType.ADD_ITEM:
           backup.manga.push(JSON.parse(change.data) as Manga);
@@ -169,18 +179,14 @@ async function patchBackup(
           backup.updates = backup.updates.filter(u => u.mangaId !== change.isarId);
           break;
         case ActionType.UPDATE_ITEM:
-          existing = await Timeline.findOne({
-            where: {
-              user: user.id,
-              actionType: change.action,
-              isarId: change.isarId,
-            },
-            order: [["clientDate", "DESC"]],
-          });
           if (existing == null || (existing?.clientDate ?? 0 < change.clientDate)) {
             idx = backup.manga.findIndex(m => m.id === change.isarId);
             if (idx != -1) {
               backup.manga[idx] = JSON.parse(change.data) as Manga;
+            }
+            if (existing != null) {
+              existing.clientDate = change.clientDate;
+              await existing.save();
             }
           }
           break;
@@ -191,18 +197,14 @@ async function patchBackup(
           backup.categories = backup.categories.filter(cat => cat.id !== change.isarId);
           break;
         case ActionType.RENAME_CATEGORY:
-          existing = await Timeline.findOne({
-            where: {
-              user: user.id,
-              action: change.action,
-              isarId: change.isarId,
-            },
-            order: [["clientDate", "DESC"]],
-          });
           if (existing == null || (existing?.clientDate ?? 0 < change.clientDate)) {
             idx = backup.categories.findIndex(cat => cat.id === change.isarId);
             if (idx != -1) {
               backup.categories[idx] = JSON.parse(change.data) as Category;
+            }
+            if (existing != null) {
+              existing.clientDate = change.clientDate;
+              await existing.save();
             }
           }
           break;
@@ -213,18 +215,14 @@ async function patchBackup(
           backup.chapters = backup.chapters.filter(ch => ch.id !== change.isarId);
           break;
         case ActionType.UPDATE_CHAPTER:
-          existing = await Timeline.findOne({
-            where: {
-              user: user.id,
-              actionType: change.action,
-              isarId: change.isarId,
-            },
-            order: [["clientDate", "DESC"]],
-          });
           if (existing == null || (existing?.clientDate ?? 0 < change.clientDate)) {
             idx = backup.chapters.findIndex(ch => ch.id === change.isarId);
             if (idx != -1) {
               backup.chapters[idx] = JSON.parse(change.data) as Chapter;
+            }
+            if (existing != null) {
+              existing.clientDate = change.clientDate;
+              await existing.save();
             }
           }
           break;
@@ -242,18 +240,14 @@ async function patchBackup(
           backup.updates = backup.updates.filter(u => u.mangaId !== history?.mangaId);
           break;
         case ActionType.UPDATE_HISTORY:
-          existing = await Timeline.findOne({
-            where: {
-              user: user.id,
-              actionType: change.action,
-              isarId: change.isarId,
-            },
-            order: [["clientDate", "DESC"]],
-          });
           if (existing == null || (existing?.clientDate ?? 0 < change.clientDate)) {
             idx = backup.history.findIndex(h => h.id === change.isarId);
             if (idx != -1) {
               backup.history[idx] = JSON.parse(change.data) as History;
+            }
+            if (existing != null) {
+              existing.clientDate = change.clientDate;
+              await existing.save();
             }
           }
           break;
@@ -274,18 +268,14 @@ async function patchBackup(
           backup.extensions = backup.extensions.filter(ext => ext.id !== change.isarId);
           break;
         case ActionType.UPDATE_EXTENSION:
-          existing = await Timeline.findOne({
-            where: {
-              user: user.id,
-              actionType: change.action,
-              isarId: change.isarId,
-            },
-            order: [["clientDate", "DESC"]],
-          });
           if (existing == null || (existing?.clientDate ?? 0 < change.clientDate)) {
             idx = backup.extensions.findIndex(ext => ext.id === change.isarId);
             if (idx != -1) {
               backup.extensions[idx] = JSON.parse(change.data) as Extension;
+            }
+            if (existing != null) {
+              existing.clientDate = change.clientDate;
+              await existing.save();
             }
           }
           break;
@@ -296,18 +286,14 @@ async function patchBackup(
           backup.tracks = backup.tracks.filter(tr => tr.id !== change.isarId);
           break;
         case ActionType.UPDATE_TRACK:
-          existing = await Timeline.findOne({
-            where: {
-              user: user.id,
-              actionType: change.action,
-              isarId: change.isarId,
-            },
-            order: [["clientDate", "DESC"]],
-          });
           if (existing == null || (existing?.clientDate ?? 0 < change.clientDate)) {
             idx = backup.tracks.findIndex(tr => tr.id === change.isarId);
             if (idx != -1) {
               backup.tracks[idx] = JSON.parse(change.data) as Track;
+            }
+            if (existing != null) {
+              existing.clientDate = change.clientDate;
+              await existing.save();
             }
           }
           break;
