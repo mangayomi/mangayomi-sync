@@ -376,5 +376,5 @@ export interface Extension {
     sourceCodeLanguage: number
     isObsolete: boolean
     isLocal: boolean
-    repo: any
+    repo: MangaExtensionsRepo | AnimeExtensionsRepo | NovelExtensionsRepo | null;
 }
