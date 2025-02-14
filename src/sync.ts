@@ -346,6 +346,9 @@ function prepareForHashCheck(backup: BackupData): {
     }),
     extensions: backup.extensions.map(ext => {
       ext.id = 0;
+      if (!ext.repo) {
+        ext.repo = null;
+      }
       return ext;
     }),
   };
