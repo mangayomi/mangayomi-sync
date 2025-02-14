@@ -1,7 +1,6 @@
 export interface Root {
     backupData: BackupData
 }
-
 export interface BackupData {
     version: string
     manga: Manga[]
@@ -11,10 +10,10 @@ export interface BackupData {
     tracks: Track[]
     trackPreferences: TrackPreference[]
     history: History[]
-    settings: Setting[]
-    extensions: Extension[]
-    extensions_preferences: ExtensionsPreference[]
     updates: Update[]
+    settings: Setting[]
+    extensions_preferences: ExtensionsPreference[]
+    extensions: Extension[]
 }
 
 export interface Manga {
@@ -103,6 +102,13 @@ export interface History {
     mangaId: number
 }
 
+export interface Update {
+    id: number
+    mangaId: number
+    chapterName: string
+    date: string
+}
+
 export interface Setting {
     animatePageTransitions: boolean
     animeDisplayType: number
@@ -164,7 +170,7 @@ export interface Setting {
     themeIsDark: boolean
     userAgent: string
     backupFrequency: any
-    backupListOptions: any
+    backupListOptions: number[]
     autoBackupLocation: any
     startDatebackup: any
     usePageTapZones: boolean
@@ -204,10 +210,12 @@ export interface Setting {
     novelDisplayType: number
     novelFontSize: number
     novelTextAlign: number
-    hideManga: boolean
-    hideAnime: boolean
-    hideNovel: boolean
+    navigationOrder: string[]
+    hideItems: string[]
     clearChapterCacheOnAppLaunch: any
+    mangaExtensionsRepo: MangaExtensionsRepo[]
+    animeExtensionsRepo: AnimeExtensionsRepo[]
+    novelExtensionsRepo: NovelExtensionsRepo[]
 }
 
 export interface ChapterFilterBookmarkedList {
@@ -232,7 +240,7 @@ export interface ChapterPageIndexList {
 
 export interface ChapterPageUrlsList {
     chapterId: number
-    urls?: string[]
+    urls: any
     headers: any
 }
 
@@ -287,35 +295,22 @@ export interface PlayerSubtitleSettings {
     backgroundColorB: number
 }
 
-export interface Extension {
-    apiUrl: string
-    appMinVerReq: string
-    baseUrl: string
-    dateFormat: string
-    dateFormatLocale: string
-    hasCloudflare: boolean
-    headers: string
-    iconUrl: string
-    id: number
-    isActive: boolean
-    isAdded: boolean
-    isFullData: boolean
-    isManga?: boolean
-    itemType: number
-    isNsfw: boolean
-    isPinned: boolean
-    lang: string
-    lastUsed: boolean
+export interface MangaExtensionsRepo {
     name: string
-    sourceCode?: string
-    sourceCodeUrl: string
-    typeSource: string
-    version: string
-    versionLast: string
-    additionalParams: string
-    sourceCodeLanguage: number
-    isObsolete: boolean
-    isLocal: boolean
+    website: string
+    jsonUrl: string
+}
+
+export interface AnimeExtensionsRepo {
+    name: string
+    website: string
+    jsonUrl: string
+}
+
+export interface NovelExtensionsRepo {
+    name: string
+    website: string
+    jsonUrl: string
 }
 
 export interface ExtensionsPreference {
@@ -352,9 +347,34 @@ export interface EditTextPreference {
     text: string
 }
 
-export interface Update {
+export interface Extension {
+    apiUrl: string
+    appMinVerReq: string
+    baseUrl: string
+    dateFormat: string
+    dateFormatLocale: string
+    hasCloudflare: boolean
+    headers: string
+    iconUrl: string
     id: number
-    mangaId: number
-    chapterName: string
-    date: string
+    isActive: boolean
+    isAdded: boolean
+    isFullData: boolean
+    isManga?: boolean
+    itemType: number
+    isNsfw: boolean
+    isPinned: boolean
+    lang: string
+    lastUsed: boolean
+    name: string
+    sourceCode?: string
+    sourceCodeUrl: string
+    typeSource: string
+    version: string
+    versionLast: string
+    additionalParams: string
+    sourceCodeLanguage: number
+    isObsolete: boolean
+    isLocal: boolean
+    repo: any
 }
