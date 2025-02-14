@@ -65,7 +65,7 @@ export function registerEndpoints(app: Express): void {
         hash.update(
           Buffer.from(JSON.stringify(filteredBackup)).toString("utf-8")
         );
-        res.status(200).json({ hash: hash.digest("hex") });
+        res.status(200).json(req.query.type === "raw" ? filteredBackup : { hash: hash.digest("hex") });
         return;
       }
       res.status(401).json({ error: "Invalid token" });
