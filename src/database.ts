@@ -1,4 +1,4 @@
-import { Sequelize } from "sequelize";
+import { Dialect, Sequelize } from "sequelize";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -6,7 +6,7 @@ dotenv.config();
 const sequelize = new Sequelize(
   process.env.DATABASE_URI ?? '',
   {
-    dialect: 'mysql',
+    dialect: process.env.DB_DIALECT as Dialect ?? 'mysql',
   }
 );
 
