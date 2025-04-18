@@ -2,7 +2,7 @@ import { Express } from "express";
 import { User } from "./model/user.js";
 import { UserDTO, validateDto } from "./dto/dto.js";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 export function registerEndpoints(app: Express): void {
   /**
@@ -49,7 +49,7 @@ export function registerEndpoints(app: Express): void {
           mangaSourcesListUrl: process.env.MANGA_SOURCE_LIST_URL ?? null,
           animeSourcesListUrl: process.env.ANIME_SOURCE_LIST_URL ?? null,
         },
-        process.env.JWT_SECRET_KEY ?? "sugoireads",
+        process.env.JWT_SECRET_KEY ?? "mangayomi",
         {
           expiresIn: `${process.env.JWT_EXPIRATION_DAYS ?? "365"}d`,
         }

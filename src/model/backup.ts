@@ -43,6 +43,8 @@ export interface Category {
     id: number
     name: string
     forItemType: number
+    pos: number
+    hide: boolean
 }
 
 export interface Chapter {

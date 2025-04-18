@@ -6,7 +6,6 @@ import compression from "compression";
 import { db } from "./database.js";
 import * as auth from "./auth.js";
 import * as data from "./data.js";
-import * as migration from "./migration.js";
 import * as sync from "./sync.js";
 
 dotenv.config();
@@ -35,7 +34,6 @@ app.use(compression());
 
 auth.registerEndpoints(app);
 data.registerEndpoints(app);
-migration.registerEndpoints(app);
 sync.registerEndpoints(app);
 
 app.listen(process.env.PORT, () => {

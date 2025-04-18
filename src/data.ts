@@ -17,7 +17,7 @@ export function registerEndpoints(app: Express): void {
             if (auth && auth.split(" ").length > 1) {
                 decodedData = jwt.verify(
                     auth.split(" ")[1],
-                    process.env.JWT_SECRET_KEY ?? "sugoireads"
+                    process.env.JWT_SECRET_KEY ?? "mangayomi"
                 );
             } else {
                 res.status(401).json({ error: "Missing token" });
@@ -65,7 +65,7 @@ export function registerEndpoints(app: Express): void {
             if (auth && auth.split(" ").length > 1) {
                 decodedData = jwt.verify(
                     auth.split(" ")[1],
-                    process.env.JWT_SECRET_KEY ?? "sugoireads"
+                    process.env.JWT_SECRET_KEY ?? "mangayomi"
                 );
             } else {
                 res.status(401).json({ error: "Missing token" });
@@ -111,7 +111,7 @@ export function registerEndpoints(app: Express): void {
             if (auth && auth.split(" ").length > 1) {
                 decodedData = jwt.verify(
                     auth.split(" ")[1],
-                    process.env.JWT_SECRET_KEY ?? "sugoireads"
+                    process.env.JWT_SECRET_KEY ?? "mangayomi"
                 );
             } else {
                 res.status(401).json({ error: "Missing token" });
@@ -157,7 +157,7 @@ export function registerEndpoints(app: Express): void {
             if (auth && auth.split(" ").length > 1) {
                 decodedData = jwt.verify(
                     auth.split(" ")[1],
-                    process.env.JWT_SECRET_KEY ?? "sugoireads"
+                    process.env.JWT_SECRET_KEY ?? "mangayomi"
                 );
             } else {
                 res.status(401).json({ error: "Missing token" });
@@ -208,7 +208,7 @@ export function registerEndpoints(app: Express): void {
             if (auth && auth.split(" ").length > 1) {
                 decodedData = jwt.verify(
                     auth.split(" ")[1],
-                    process.env.JWT_SECRET_KEY ?? "sugoireads"
+                    process.env.JWT_SECRET_KEY ?? "mangayomi"
                 );
             } else {
                 res.status(401).json({ error: "Missing token" });
@@ -255,7 +255,7 @@ export function registerEndpoints(app: Express): void {
             if (auth && auth.split(" ").length > 1) {
                 decodedData = jwt.verify(
                     auth.split(" ")[1],
-                    process.env.JWT_SECRET_KEY ?? "sugoireads"
+                    process.env.JWT_SECRET_KEY ?? "mangayomi"
                 );
             } else {
                 res.status(401).json({ error: "Missing token" });

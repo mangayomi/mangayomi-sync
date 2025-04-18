@@ -4,33 +4,38 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
       - MODE=prod
-      - DATABASE_URI=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@database:3306/${MYSQL_DATABASE}
-      - DB_DIALECT=mysql
+      - DATABASE_URI=${DB_DIALECT}://${MYSQL_USER}:${MYSQL_PASSWORD}@database/${MYSQL_DATABASE}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_EXPIRATION_DAYS=${JWT_EXPIRATION_DAYS}
+      - DB_DIALECT=${DB_DIALECT}
+      - PORT=${PORT}
     depends_on:
       database:
         condition: service_healthy
     ports:
-      - ${PORT}
+      - ${PORT}:${PORT}
 
   database:
     image: mysql/mysql-server:8.0
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
-      - MYSQL_ROOT_HOST=%
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_HOST=%
     healthcheck:
-      test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
+      test: mysqladmin ping -h 127.0.0.1 -u ${MYSQL_USER} --password=${MYSQL_PASSWORD}
       start_period: 5s
       interval: 5s
       timeout: 1s
       retries: 15
     volumes:
       - database-data:/var/lib/mysql
+    ports:
+      - 3306:3306
 
 volumes:
   database-data:
