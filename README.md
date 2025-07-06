@@ -1,3 +1,6 @@
+# [DEPRECATED]
+Mangayomi (any version after v0.6.25) will be using the new (sync server)[https://github.com/Schnitzel5/mangayomi-server] instead.
+
 # mangayomi-sync
 
 The self-hosted sync server for Mangayomi.
